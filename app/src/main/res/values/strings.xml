@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MReader</string>
+    <string name="Hint">Enter URL</string>
+    <string name="search">Search Item</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="back">Go Back</string>
+    <string name="forward">Go Forward</string>
+    <string name="Home">Go Home</string>
+    <string name="Menu">Menu</string>
+</resources>
