@@ -26,6 +26,13 @@
             android:name=".PageActivity.LibraryActivity"
             android:exported="false" />
         <activity
+            android:name=".PageActivity.IntegratedReaderActivity"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:screenOrientation="portrait"
+            android:exported="true" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

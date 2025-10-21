@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.LG.mreader"
-        minSdk = 28
+        minSdk = 33
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -27,11 +27,11 @@ android {
         }
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures{
         viewBinding= true
@@ -66,9 +66,13 @@ dependencies {
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
     implementation( "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
-
+    implementation("org.jsoup:jsoup:1.17.2")
     implementation("com.karumi:dexter:6.2.3")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.squareup.picasso:picasso:2.8")
 
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
 }

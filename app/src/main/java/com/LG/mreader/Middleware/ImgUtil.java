@@ -20,7 +20,7 @@ public class ImgUtil {
             int imageWidth = connection.getHeaderFieldInt("Width", -1);
             int imageHeight = connection.getHeaderFieldInt("Height", -1);
 
-            Log.d("hello", "Width: " + imageWidth + ", Height: " + imageHeight);
+           // Log.d("hello", "Width: " + imageWidth + ", Height: " + imageHeight);
 
             // Now you have the original width and height of the image from the URL
         } catch (IOException e) {

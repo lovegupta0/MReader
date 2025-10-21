@@ -6,74 +6,71 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.LG.mreader.DataModel.ViewImageDataModel;
-import com.LG.mreader.Middleware.ImageLoader;
-import com.LG.mreader.Middleware.ImgUtil;
+import com.LG.mreader.DataModel.ImageModel;
 import com.LG.mreader.R;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
 
-    private List<ViewImageDataModel> imageUrls;
-    private Context context;
+    private ImageModel imageModel;
+    private final Context context;
 
     public ImageAdapter(Context context) {
         this.context = context;
-        this.imageUrls =new ArrayList<>();
     }
 
-    public void setImageUrls(List<ViewImageDataModel> imageUrls) {
-        this.imageUrls = imageUrls;
+    public void setImageUrls(ImageModel imageModel) {
+        this.imageModel = imageModel;
         notifyDataSetChanged();
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.image, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        ImageLoader img=new ImageLoader(holder.imageView);
-        String imageUrl = imageUrls.get(position).getSrc();
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        // Get the specific image URL for the current item's position from the stable list.
+        String imageUrl = imageModel.getImgList().get(position);
+        Log.d("ImageAdapter", "Loading url: " + imageUrl);
 
-        Picasso.get().load(imageUrl).placeholder(R.drawable.reload_ic).into(holder.imageView, new Callback() {
-            @Override
-            public void onSuccess() {
-                adjustImageViewDimensions(holder.imageView);
-            }
+        // Use Picasso to load the image, letting it handle sizing automatically.
+        Picasso.get()
+                .load(imageUrl)
+                .placeholder(R.drawable.reload_ic) // Show a placeholder while loading.
+                .fit() // Resize the image to fit the ImageView bounds.
+                .centerInside() // Scale the image to maintain aspect ratio without cropping.
+                .into(holder.imageView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        // Image loaded successfully. No manual resizing needed.
+                    }
 
-            @Override
-            public void onError(Exception e) {
-
-            }
-        });
-    }
-    private void adjustImageViewDimensions(ImageView photoView) {
-        // Calculate the desired height based on the original image aspect ratio
-        int originalWidth = photoView.getDrawable().getIntrinsicWidth();
-        int originalHeight = photoView.getDrawable().getIntrinsicHeight();
-        int desiredHeight = (int) ((float) photoView.getWidth() / originalWidth * originalHeight);
-
-        // Set the adjusted height to the PhotoView
-        ViewGroup.LayoutParams layoutParams = photoView.getLayoutParams();
-        layoutParams.height = desiredHeight;
-        photoView.setLayoutParams(layoutParams);
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("ImageAdapter", "Picasso error: " + e.getMessage(), e);
+                    }
+                });
     }
 
     @Override
     public int getItemCount() {
-        return imageUrls.size();
+        // Return 0 if the model or list is null, otherwise return the stable list size.
+        if (imageModel == null || imageModel.getImgList() == null) {
+            return 0;
+        }
+        return imageModel.getImgList().size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
 
         public ViewHolder(View itemView) {
@@ -81,5 +78,4 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
             imageView = itemView.findViewById(R.id.imageView);
         }
     }
-
 }

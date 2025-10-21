@@ -1,101 +1,98 @@
 package com.LG.mreader.Middleware;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 
-import androidx.lifecycle.Observer;
-
-import com.LG.mreader.AppRepository.AppRepository;
-import com.LG.mreader.DataModel.PageData;
-import com.LG.mreader.DataModel.ViewImageDataModel;
+import com.LG.mreader.DataModel.Chapter;
+import com.LG.mreader.DataModel.Page;
+import com.LG.mreader.PoolService.PagePool;
+import com.LG.mreader.PageActivity.IntegratedReaderActivity;
 import com.LG.mreader.ViewModel.ImageViewModel;
-import com.LG.mreader.ViewModel.WebViewModel;
-import com.google.gson.Gson;
-
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class WebviewRepoMiddleware {
-    private AppRepository repo;
-    private ImageViewModel imageViewModel;
+    private final ImageViewModel imageViewModel;
+    private final ImageDataContainer imageDataContainer;
+    private static String TAG = "WebviewRepoMiddleware";
 
-    public WebviewRepoMiddleware(AppRepository repo,ImageViewModel imageViewModel){
-        this.repo=repo;
-        this.imageViewModel=imageViewModel;
+
+    public WebviewRepoMiddleware(ImageViewModel imageViewModel) {
+        this.imageViewModel = imageViewModel;
+        this.imageDataContainer = ImageDataContainer.getInstance();
     }
-    public void addviewImageList(String str,String url){
+
+    public void addviewImageList(String str, String url) {
         try {
-            String[] obj=str.split("~#");
-            String hompage=obj[0];
-            String pageSrc=obj[1];
-            String title=obj[2];
-            String imgSrc=obj[5];
-            String prevPage=obj[4];
-            String nextPage=obj[3];
-            String[] img=imgSrc.split(",");
-            List<String> imgList= Arrays.stream(img).filter(e->e.contains("chapter")).collect(Collectors.toList());
-
-            if(imgList.size()>0 && url.contains("all-pages")){
-                if (!compareData(hompage,pageSrc,title,prevPage,nextPage,imgList)){
-                    Log.d("hello","Incomming: "+Integer.toString(imgList.size()));
-                    repo.clearViewImage();
-                    repo.addViewImageList(imgList,pageSrc);
-                    imageViewModel.setShowImageView(true);
-                    setData(hompage,pageSrc,title,prevPage,nextPage,imgList);
-
-                }
+            String[] obj = str.split("~#");
+            if (obj.length < 6) {
+                Log.e(TAG, "Invalid data format: " + str);
+                return;
             }
-            List<ViewImageDataModel> imglst=repo.getViewImage().getValue();
+            String hompage = obj[0];
+            String title = obj[2];
+            String imgSrc = obj[5];
+            String prevPage = obj[4];
+            String nextPage = obj[3];
+            PagePool pagePool=PagePool.getInstance();
+            String[] img = imgSrc.split(",");
+            List<String> imgList = Arrays.stream(img).filter(e -> e.contains("chapter")).collect(Collectors.toList());
+            List<Page> pageList = imgList.stream()
+                    .map(pagePool::getOrCreatePage).collect(Collectors.toList());
+            Log.d(TAG, "Total: " + imgList.size());
+            //Log.d("hello", "Total: " + imgList);
+            if (!imgList.isEmpty() && imgList.size()>0) {
 
-        }catch (Exception e){
-            Log.e("emsg",e.getMessage());
-        }
-    }
+                Chapter chapter = new Chapter(title,nextPage,prevPage,hompage,pageList,hompage);
+                imageDataContainer.addImageModel(chapter);
+                imageViewModel.setShowImageView(true);
 
-    private boolean compareData(String homepage,String pageSrc, String title, String prevPage,String nextPage,List<String> lst ){
-        if(!imageViewModel.getHomePage().equals(homepage)){
-            Log.d("hello","Home false");
-            return false;
-        }
-        if(!imageViewModel.getTitle().equals(title))  {
-            Log.d("hello","title false");
-            return false;
-        }
-        if (!imageViewModel.getPageSrc().equals(pageSrc))  {
-            Log.d("hello","pageSrc false");
-            return false;
-        };
-        if (!imageViewModel.getNextPage().equals(nextPage)){
-            Log.d("hello","nextPage false");
-            return false;
-        }
-        if (!imageViewModel.getPrevPage().equals(prevPage)) {
-            Log.d("hello","prevPage false");
-            return false;
-        }
-        HashMap<String,Integer> map=new HashMap<>();
-           if(imageViewModel.getImgList()!=null){
-               for (String s: imageViewModel.getImgList()){
-                   map.put(s,1);
-               }
-               for(String key:lst){
-                   if(!map.containsKey(key)) return false;
-               }
-           }
+                /*
+                chapter.title = title;
+                chapter.id = hompage;
+                chapter.pages = pageList;
+                chapter.nextPageUrl = nextPage;
+                chapter.prevPageUrl = prevPage;
+                chapter.homeUrl = hompage;
+                ImagePreprocessor pre = new ImagePreprocessor(context, 1,256);
+                AtomicInteger remaining = new AtomicInteger(chapter.pages.size());
+                for (Page p : chapter.pages) {
+                    if(p.optimizedUri!=null) continue;
+                    String out = "cache_" + p.id + ".webp";
+                    pre.process(p.sourceUri, out, new ImagePreprocessor.Callback() {
+                        @Override
+                        public void onSuccess(Uri optimizedUri) {
+                            p.optimizedUri = optimizedUri;
+                            if (remaining.decrementAndGet() == 0) {
+                                // all pages done -> launch reader
+                                Intent i = new Intent(context, IntegratedReaderActivity.class);
+                                i.putExtra("chapter", chapter);
+                                context.startActivity(i);
+                            }
+                        }
 
-        return true;
-    }
-    private void setData(String homepage,String pageSrc, String title, String prevPage,String nextPage,List<String> lst ){
+                        @Override
+                        public void onError(Exception e) {
+                            if (remaining.decrementAndGet() == 0) {
+                                Intent i = new Intent(context, IntegratedReaderActivity.class);
+                                i.putExtra("chapter", chapter);
+                                context.startActivity(i);
+                            }
+                        }
+                    });
 
-        imageViewModel.setHomePage(homepage);
-        imageViewModel.setImgList(lst);
-        imageViewModel.setPageSrc(pageSrc);
-        imageViewModel.setTitle(title);
-        imageViewModel.setNextPage(nextPage);
-        imageViewModel.setPrevPage(prevPage);
-
+                }*/
+            }
+        } catch (Exception e) {
+            Log.e(TAG, Objects.toString(e.getMessage(), "Unknown error"));
+        }
     }
 }

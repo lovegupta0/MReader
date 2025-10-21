@@ -14,12 +14,16 @@ import com.LG.mreader.AppDatabase.AppDatabase;
 import com.LG.mreader.AppDatabase.ViewImageDao;
 import com.LG.mreader.AppRepository.AppRepository;
 import com.LG.mreader.DataModel.BookmarkDataModel;
+import com.LG.mreader.DataModel.Chapter;
 import com.LG.mreader.DataModel.ImageDataModel;
+import com.LG.mreader.DataModel.ImageModel;
 import com.LG.mreader.DataModel.ViewImageDataModel;
+import com.LG.mreader.Middleware.ImageDataContainer;
 
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 public class ImageViewModel extends AndroidViewModel {
 
@@ -31,23 +35,20 @@ public class ImageViewModel extends AndroidViewModel {
     private String nextPage="";
     private String prevPage="";
     private List<String> imgList=new ArrayList<>();
-    private LiveData<List<ViewImageDataModel>> getData;
+    private LiveData<Chapter> getData;
     private LiveData<List<ImageDataModel>> ImgData;
     private LiveData<List<BookmarkDataModel>> bookmarks;
-    private AppRepository repo;
+    private ImageDataContainer imageDataContainer;
+
 
     public ImageViewModel(@NonNull Application application) {
         super(application);
-
-            repo = new AppRepository(application);
-            getData = repo.getViewImage();
-            ImgData=  repo.getImage();
-            bookmarks=repo.getBookmarks();
+        imageDataContainer=ImageDataContainer.getInstance();
     }
 
-    public LiveData<List<ViewImageDataModel>> getImgSrc(){
-        if(getData.getValue()==null){
-            getData=repo.getViewImage();
+    public LiveData<Chapter> getImgSrc(){
+        if(!imageDataContainer.isEmpty()){
+            getData=new MutableLiveData<>(imageDataContainer.getModel());
         }
         return getData;
     }
