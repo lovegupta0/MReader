@@ -7,13 +7,17 @@ import androidx.lifecycle.LiveData;
 
 import com.LG.mreader.AppDatabase.AppDatabase;
 import com.LG.mreader.AppDatabase.BookmarkDao;
+import com.LG.mreader.AppDatabase.HistoryDao;
 import com.LG.mreader.AppDatabase.ImageDao;
 import com.LG.mreader.AppDatabase.LibraryDao;
 import com.LG.mreader.AppDatabase.ViewImageDao;
 import com.LG.mreader.DataModel.BookmarkDataModel;
+import com.LG.mreader.DataModel.History;
 import com.LG.mreader.DataModel.ImageDataModel;
 import com.LG.mreader.DataModel.LibraryDataModel;
 import com.LG.mreader.DataModel.ViewImageDataModel;
+import com.LG.mreader.PoolService.CentralThreadPool;
+import com.LG.mreader.Utility.ThreadsPoolManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +36,9 @@ public class AppRepository {
     private final ImageDao imageDao;
     private final ViewImageDao viewImageDao;
     private final ExecutorService executorService;
+    private final HistoryDao historyDao;
+    private final ThreadsPoolManager threadsPoolManager;
+
 
     public AppRepository(Context context){
         AppDatabase database=AppDatabase.getInstance(context);
@@ -40,6 +47,8 @@ public class AppRepository {
         imageDao=database.imageDao();
         viewImageDao= database.viewImageDao();
         executorService = Executors.newSingleThreadExecutor();
+        historyDao=database.historyDao();
+        threadsPoolManager= CentralThreadPool.getInstance();
     }
     public void insertLibrary(LibraryDataModel data){
         executorService.execute(()->libraryDao.insertLibrary(data));
@@ -79,5 +88,21 @@ public class AppRepository {
     }
     public void insertBookMark(BookmarkDataModel data){
         executorService.execute(()->bookmarkDao.insertBookmark(data));
+    }
+
+    public List<History> getAllHistory(){
+        return historyDao.getHistory();
+
+    }
+    public void clearHistory(){
+        threadsPoolManager.submitTask(()-> {
+            historyDao.clearHistory();
+        });
+    }
+
+    public void insertHistory(History data){
+        threadsPoolManager.submitTask(()->{
+            historyDao.insertHistory(data);
+        });
     }
 }

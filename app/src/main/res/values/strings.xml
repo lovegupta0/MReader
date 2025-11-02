@@ -7,4 +7,19 @@
     <string name="forward">Go Forward</string>
     <string name="Home">Go Home</string>
     <string name="Menu">Menu</string>
+    <string name="tabs">Tabs</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="history">History</string>
+    <string name="read_mode">Read</string>
+    <string name="reload">Reload</string>
+    <string name="add_bookmark">Add Bookmark</string>
+    <string name="desktop">Desktop</string>
+    <string name="incognito">Incognito</string>
+    <string name="report">Report</string>
+    <string name="block">Block</string>
+    <string name="download">Download</string>
+    <string name="feedback">Feedback</string>
+    <string name="share">Share</string>
+    <string name="settings">Settings</string>
+    <string name="quit">Quit</string>
 </resources>

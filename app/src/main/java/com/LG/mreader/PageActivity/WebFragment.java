@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.LG.mreader.AppRepository.AppRepository;
+import com.LG.mreader.DataModel.History;
 import com.LG.mreader.DataModel.ViewImageDataModel;
 import com.LG.mreader.Middleware.WebviewRepoMiddleware;
 import com.LG.mreader.R;
@@ -46,8 +47,11 @@ public class WebFragment extends Fragment {
         webBinding = FragmentWebBinding.inflate(inflater, container, false);
         webViewModel = new ViewModelProvider(requireActivity()).get(WebViewModel.class);
         imageViewModel = new ViewModelProvider(requireActivity()).get(ImageViewModel.class);
-        webBinding.web.getSettings().setJavaScriptEnabled(true);
         repo = new AppRepository(requireActivity());
+
+
+        webBinding.web.getSettings().setJavaScriptEnabled(true);
+
         webviewRepoMiddleware = new WebviewRepoMiddleware(imageViewModel);
         ContextManager.getInstance().setWebFragmentContext(requireActivity());
         webBinding.web.setWebViewClient(new WebViewClient() {
@@ -69,6 +73,7 @@ public class WebFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                repo.insertHistory(new History(url));
 
                 // Execute JavaScript once after page is fully loaded
                 webBinding.web.evaluateJavascript(

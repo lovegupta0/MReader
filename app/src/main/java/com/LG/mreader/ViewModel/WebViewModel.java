@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class WebViewModel  extends ViewModel {
-    private MutableLiveData<String> urlAddress=new MutableLiveData<>("https://www.mgeko.cc/reader/en/rebirth-of-the-divine-demon-chapter-1-eng-li/");
+    private MutableLiveData<String> urlAddress=new MutableLiveData<>("https://www.mgeko.cc/reader/en/spirit-mage-expelled-from-the-hero-chapter-1-eng-li/");
     private MutableLiveData<Boolean> webRequest=new MutableLiveData<>(false);
 
     public void setUrlAddress(String url){

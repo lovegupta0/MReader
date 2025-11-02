@@ -47,7 +47,9 @@ public class ImageDataContainer {
     public void addImageModel(Chapter model) {
         imageModels.add(model);
     }
-
+    public Chapter getCurrentChapter() {
+        return model;
+    }
 
 
 }

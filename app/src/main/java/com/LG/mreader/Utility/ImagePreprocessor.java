@@ -8,7 +8,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.LG.mreader.Common.ImageDownloader;
-import com.LG.mreader.PoolService.ThreadPoolManager;
+import com.LG.mreader.PoolService.ImageThreadPool;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,7 +21,7 @@ public class ImagePreprocessor {
 
     private final CacheManager cacheManager;
     private final ImageDownloader imageDownloader;
-    private final ThreadPoolManager threadPoolManager;
+    private final ThreadsPoolManager imageThreadPool;
     private final Context ctx;
 
     public interface Callback {
@@ -32,13 +32,13 @@ public class ImagePreprocessor {
     public ImagePreprocessor() {
         this.cacheManager = CacheManager.getInstance();
         this.imageDownloader = new ImageDownloader();
-        this.threadPoolManager = ThreadPoolManager.getInstance();
+        this.imageThreadPool = ImageThreadPool.getInstance();
         this.ctx = ContextManager.getInstance().getWebFragmentContext();
     }
 
     // === ASYNC VARIANT ===
     public Future<Uri> processAsync(final Uri sourceUri, final String outFilename, final Callback cb) {
-        return threadPoolManager.submitTask((Callable<Uri>) () -> processBlocking(sourceUri, outFilename, cb));
+        return imageThreadPool.submitTask((Callable<Uri>) () -> processBlocking(sourceUri, outFilename, cb));
     }
 
     // === BLOCKING VARIANT ===
@@ -82,7 +82,8 @@ public class ImagePreprocessor {
 
             bmp = BitmapFactory.decodeFile(sourceFile.getAbsolutePath(), opts);
             if (bmp == null) throw new RuntimeException("Decode failed: " + sourceFile.getAbsolutePath());
-            Log.d(TAG, "Decoded bitmap: " + bmp.getWidth() + "x" + bmp.getHeight());
+            Log.d(TAG, "Decoded resolution bitmap: " + bmp.getWidth() + "x" + bmp.getHeight() +
+                    " (" + (bmp.getByteCount() / 1024 / 1024) + " MB)");
 
             // crop
             Rect crop = detectContentBounds(bmp);

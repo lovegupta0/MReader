@@ -20,6 +20,7 @@ import com.LG.mreader.DataModel.ImageDataModel;
 import com.LG.mreader.DataModel.ViewImageDataModel;
 import com.LG.mreader.PageActivity.HomeFragment;
 import com.LG.mreader.PageActivity.ImageActivity;
+import com.LG.mreader.PageActivity.MenuFragement;
 import com.LG.mreader.PageActivity.WebFragment;
 import com.LG.mreader.ViewModel.ImageViewModel;
 import com.LG.mreader.ViewModel.WebViewModel;
@@ -113,6 +114,20 @@ public class MainActivity extends AppCompatActivity {
                 else {
                     return;
                 }
+            }
+        });
+        main.menu.setOnClickListener(new  View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Fragment fragment=manger.findFragmentById(R.id.frame);
+                //MenuFragement menuFragement=(MenuFragement) manger.findFragmentById(R.id.menu);
+                if(fragment instanceof MenuFragement){
+                    changeFragment(new HomeFragment());
+                }
+                else{
+                    changeFragment(new MenuFragement());
+                }
+
             }
         });
 

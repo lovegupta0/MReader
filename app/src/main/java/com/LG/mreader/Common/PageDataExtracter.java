@@ -18,60 +18,130 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PageDataExtracter {
     private static String TAG="Common";
 
+    private static String extractMangaData(String html, String baseUrl) {
+        // Parse with base URL so absUrl() works correctly
+        Document doc = Jsoup.parse(html, baseUrl);
 
-
-    public static String extractMangaData(String html) {
-        Document doc = Jsoup.parse(html);
-
-        // homepage (logo or root link)
+        // 1️⃣ Homepage (logo link)
         String homepage = "";
-        Element logo = doc.selectFirst("a.logo, a[href=/]");
-        if (logo != null) homepage = logo.absUrl("href");
-
-        // main image source (first reader image)
-        String pageSource = "";
-        Element pageImg = doc.selectFirst("img#manga-page, img.reader-page, .page img");
-        if (pageImg != null) pageSource = pageImg.absUrl("src");
-
-        // title (try <title> first, fallback <h1>)
-        String title = "";
-        Element titleTag = doc.selectFirst("title");
-        if (titleTag != null) title = titleTag.text();
-        else {
-            Element h1 = doc.selectFirst("h1");
-            if (h1 != null) title = h1.text();
+        Element logoLink = doc.selectFirst(".nav-logo a");
+        if (logoLink != null) {
+            homepage = logoLink.absUrl("href");
         }
 
-        // navigation (next & prev)
-        String nextPage = "";
-        Element next = doc.selectFirst("a.next, a[rel=next]");
-        if (next != null) nextPage = next.absUrl("href");
-
-        String prevPage = "";
-        Element prev = doc.selectFirst("a.prev, a[rel=prev]");
-        if (prev != null) prevPage = prev.absUrl("href");
-
-        // all images inside chapter-reader
-        StringBuilder imgSrcBuilder = new StringBuilder();
-        Element reader = doc.getElementById("chapter-reader");
-        if (reader != null) {
-            Elements imgs = reader.getElementsByTag("img");
-            for (int i = 0; i < imgs.size(); i++) {
-                if (i > 0) imgSrcBuilder.append(",");
-                imgSrcBuilder.append(imgs.get(i).absUrl("src"));
+        // 2️⃣ Title (prefer <title>, fallback to <h1>)
+        String title = "";
+        Element titleTag = doc.selectFirst("title");
+        if (titleTag != null && !titleTag.text().isEmpty()) {
+            title = titleTag.text().trim();
+        } else {
+            Element h1 = doc.selectFirst("h1");
+            if (h1 != null) {
+                title = h1.text().trim();
             }
         }
 
-        String imgSrc = imgSrcBuilder.toString();
+        // 3️⃣ Next page link (skip disabled links)
+        String nextPage = "";
+        Element nextLink = doc.selectFirst("a.nextchap:not(.isDisabled)");
+        if (nextLink != null) {
+            nextPage = nextLink.absUrl("href");
+        }
 
-        // Final concatenated string (same format you wanted)
+        // 4️⃣ Previous page link (skip disabled links)
+        String prevPage = "";
+        Element prevLink = doc.selectFirst("a.prevchap:not(.isDisabled)");
+        if (prevLink != null) {
+            prevPage = prevLink.absUrl("href");
+        }
+
+        // 5️⃣ Page source (base URL from first image)
+        String pageSource = "";
+
+        // 6️⃣ All image sources inside #chapter-reader
+        StringBuilder allImages = new StringBuilder();
+
+        Element reader = doc.getElementById("chapter-reader");
+        if (reader != null) {
+            Elements imgs = reader.select("img");
+
+            // Get base URI from first image's src
+            if (!imgs.isEmpty()) {
+                String firstSrc = imgs.get(0).absUrl("src");
+                if (!firstSrc.isEmpty()) {
+                    // Extract base URI (everything up to the last '/')
+                    int lastSlash = firstSrc.lastIndexOf('/');
+                    if (lastSlash > 0) {
+                        pageSource = firstSrc.substring(0, lastSlash + 1);
+                    } else {
+                        pageSource = firstSrc;
+                    }
+                }
+            }
+
+            // Collect all image URLs
+            for (int i = 0; i < imgs.size(); i++) {
+                if (i > 0) {
+                    allImages.append(",");
+                }
+                String src = imgs.get(i).absUrl("src");
+                allImages.append(src);
+            }
+        }
+
+        // 7️⃣ Final concatenation (same structure as JS version)
         return homepage + "~#" + pageSource + "~#" + title + "~#"
-                + nextPage + "~#" + prevPage + "~#" + imgSrc;
+                + nextPage + "~#" + prevPage + "~#" + allImages;
     }
-    public static String fetchNextChapter(String urlString){
+
+    /**
+     * Overload: Extract base URL from HTML if available
+     */
+    private static String extractMangaData(String html) {
+        // Try to extract base URL from canonical link or og:url
+        Document doc = Jsoup.parse(html);
+        String baseUrl = "";
+
+        Element canonical = doc.selectFirst("link[rel=canonical]");
+        if (canonical != null) {
+            baseUrl = canonical.attr("href");
+            // Get just the domain part
+            if (baseUrl.contains("/reader/")) {
+                baseUrl = baseUrl.substring(0, baseUrl.indexOf("/reader/"));
+            }
+        }
+
+        if (baseUrl.isEmpty()) {
+            Element ogUrl = doc.selectFirst("meta[property=og:url]");
+            if (ogUrl != null) {
+                baseUrl = ogUrl.attr("content");
+                if (baseUrl.contains("/manga/")) {
+                    baseUrl = baseUrl.substring(0, baseUrl.indexOf("/manga/"));
+                }
+            }
+        }
+
+        // Fallback: try to guess from image sources
+        if (baseUrl.isEmpty()) {
+            Element firstImg = doc.selectFirst("#chapter-reader img");
+            if (firstImg != null) {
+                String src = firstImg.attr("src");
+                if (src.startsWith("http")) {
+                    // Extract domain from absolute image URL won't help
+                    // Use a reasonable default
+                    baseUrl = "https://www.mgeko.cc";
+                }
+            }
+        }
+
+        return extractMangaData(html, baseUrl);
+    }
+
+    public static String fetchNextChapter(String urlString,String baseUrl){
+        HttpURLConnection conn=null;
         try {
             URL url = new URL(urlString);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+             conn= (HttpURLConnection) url.openConnection();
 
             // Set HTTP method
             conn.setRequestMethod("GET");
@@ -113,11 +183,16 @@ public class PageDataExtracter {
             }
             in.close();
 
-            conn.disconnect();
-            return response.toString();
+
+            return extractMangaData(response.toString());
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        finally {
+            if(conn!=null){
+                conn.disconnect();
+            }
         }
         return "";
 

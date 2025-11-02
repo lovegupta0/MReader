@@ -75,4 +75,20 @@ public class LongStripAdapter extends RecyclerView.Adapter<ImageViewHolder> {
         this.pages = pages == null ? new ArrayList<>() : pages;
         notifyDataSetChanged();
     }
+    /**
+     * Append pages to existing list (used for infinite scroll)
+     */
+    public void appendPages(ArrayList<Page> newPages) {
+        if (newPages == null || newPages.isEmpty()) return;
+
+        int oldSize = this.pages.size();
+        this.pages.addAll(newPages);
+        notifyItemRangeInserted(oldSize, newPages.size());
+    }
+    /**
+     * Get current page list
+     */
+    public ArrayList<Page> getPages() {
+        return pages;
+    }
 }

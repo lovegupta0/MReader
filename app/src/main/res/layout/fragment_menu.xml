@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:background="#000000"
+
+    tools:context=".PageActivity.MenuFragement">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <!-- ===== First Row ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_tabs"
+                android:tag="tabs"
+                tools:ignore="MissingId"
+                tools:text="Tabs"
+                tools:src="@drawable/ic_tabs" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_bookmarks"
+                tools:text="Bookmarks"
+                tools:src="@drawable/ic_bookmarks" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_history"
+                tools:text="History"
+                tools:src="@drawable/ic_history" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_read_mode"
+                tools:text="Read"
+                tools:src="@drawable/ic_read_mode" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_reload"
+                tools:text="Reload"
+                tools:src="@drawable/reload_ic" />
+        </LinearLayout>
+
+        <!-- ===== Second Row ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_bookmark_add"
+                tools:text="Add Bookmark"
+                tools:src="@drawable/ic_bookmark_adds" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_pc"
+                tools:text="Desktop"
+                tools:src="@drawable/ic_pc" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_incognito"
+                tools:text="Incognito"
+                tools:src="@drawable/ic_incongnio" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_report"
+                tools:text="Report"
+                tools:src="@drawable/ic_report" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_block"
+                tools:text="Block"
+                tools:src="@drawable/ic_block" />
+        </LinearLayout>
+
+        <!-- ===== Third Row ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_download"
+                tools:text="Download"
+                tools:src="@drawable/ic_download" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_feedback"
+                tools:text="Feedback"
+                tools:src="@drawable/ic_feedback" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_share"
+                tools:text="Share"
+                tools:src="@drawable/ic_share" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_settings"
+                tools:text="Settings"
+                tools:src="@drawable/ic_setting" />
+
+            <include layout="@layout/item_menu_button"
+                android:id="@+id/menu_quit"
+                tools:text="Quit"
+                tools:src="@drawable/ic_quit" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -5,10 +5,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import com.LG.mreader.PoolService.ThreadPoolManager;
 import com.LG.mreader.Utility.ImagePreprocessor;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
