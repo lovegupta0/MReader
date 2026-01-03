@@ -21,4 +21,7 @@ public interface SettingDao {
 
     @Query("SELECT * FROM LGSetting LIMIT 1")
     public SettingDataModel getSettingDataModel();
+
+    @Query("Update LGSetting set readMode=:readMode where id='LG1000'")
+    public void updateReadMode(boolean readMode);
 }

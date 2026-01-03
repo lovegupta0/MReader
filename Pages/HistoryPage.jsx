@@ -7,10 +7,13 @@ import {
   FlatList,
   RefreshControl,
   Pressable,
+  NativeModules,
 } from 'react-native';
 
 import HistoryBox from '../Components/HistoryBox';
 import SearchBox from '../Components/SearchBox';
+
+const { HistoryBridge } = NativeModules;
 
 const HistoryPage = ({
   data = [],
@@ -45,13 +48,14 @@ const HistoryPage = ({
   }, [localData, query]);
 
   const renderItem = useCallback(
-    ({ item }) => <HistoryBox url={item.url} date={item.createdOn} />,
+    ({ item }) => <HistoryBox url={item.url} date={item.createdOn}  />,
     []
   );
 
   const keyExtractor = useCallback((item) => String(item.id ?? item.url), []);
 
   const handleClearAll = useCallback(() => {
+    HistoryBridge.deleteAllHistory();
     if (onClearAll) onClearAll();
     else setLocalData([]);
   }, [onClearAll]);

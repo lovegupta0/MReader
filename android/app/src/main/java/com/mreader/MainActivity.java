@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         menuViewModel=MenuViewModel.getInstance();
         defaultConfiguration=new UploadDefaultConfiguration();
         settingStorage=SettingStorage.getInstance();
+        Intent intent=getIntent();
         if(!settingStorage.verify()){
             defaultConfiguration.restore();
         }
@@ -108,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        if(intent.hasExtra("openWeb") && intent.getBooleanExtra("openWeb",false) && intent.hasExtra("url")){
+            webViewModel.setUrlAddress(intent.getStringExtra("url"));
+            webViewModel.setWebRequest(true);
+        }
+
 
         main.prev.setOnClickListener(new View.OnClickListener() {
             @Override

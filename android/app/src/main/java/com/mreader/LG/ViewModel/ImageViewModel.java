@@ -19,21 +19,23 @@ public class ImageViewModel extends AndroidViewModel {
 
     private MutableLiveData<Boolean> nextBatch =new MutableLiveData<>(false);
     private MutableLiveData<Boolean> showImageView=new MutableLiveData<>(false);
-    private String homePage="";
-    private String title="";
-    private String pageSrc="";
-    private String nextPage="";
-    private String prevPage="";
+    private MenuViewModel menuViewModel;
+
     private List<String> imgList=new ArrayList<>();
     private LiveData<Chapter> getData;
     private LiveData<List<ImageDataModel>> ImgData;
-    private LiveData<List<BookmarkDataModel>> bookmarks;
+
     private ImageDataContainer imageDataContainer;
 
 
     public ImageViewModel(@NonNull Application application) {
         super(application);
         imageDataContainer=ImageDataContainer.getInstance();
+        menuViewModel=MenuViewModel.getInstance();
+    }
+
+    public void setNextBatch(Boolean req){
+        nextBatch.setValue(req);
     }
 
     public LiveData<Chapter> getImgSrc(){
@@ -43,60 +45,20 @@ public class ImageViewModel extends AndroidViewModel {
         return getData;
     }
 
-    public  void setNextBatch(Boolean req){
-        nextBatch.setValue(req);
-    }
-    public LiveData<Boolean> getNextBatch(){
-        return nextBatch;
-    }
+
 
     public void setShowImageView(Boolean req){
-        showImageView.setValue(req);
+        if(menuViewModel.getReadMode().getValue()){
+            showImageView.setValue(req);
+        }
+
     }
 
     public LiveData<Boolean> getShowImageView(){
         return showImageView;
     }
 
-    public String getHomePage() {
-        return homePage;
-    }
 
-    public void setHomePage(String homePage) {
-        this.homePage = homePage;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getPageSrc() {
-        return pageSrc;
-    }
-
-    public void setPageSrc(String pageSrc) {
-        this.pageSrc = pageSrc;
-    }
-
-    public String getNextPage() {
-        return nextPage;
-    }
-
-    public void setNextPage(String nextPage) {
-        this.nextPage = nextPage;
-    }
-
-    public String getPrevPage() {
-        return prevPage;
-    }
-
-    public void setPrevPage(String prevPage) {
-        this.prevPage = prevPage;
-    }
 
     public List<String> getImgList() {
         return imgList;
@@ -115,7 +77,4 @@ public class ImageViewModel extends AndroidViewModel {
         return ImgData;
     }
 
-    public LiveData<List<BookmarkDataModel>> getBookmarks() {
-        return bookmarks;
-    }
 }

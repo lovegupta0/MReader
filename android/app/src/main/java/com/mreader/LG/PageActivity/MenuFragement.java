@@ -1,6 +1,7 @@
 package com.mreader.LG.PageActivity;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,10 +13,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.mreader.LG.Middleware.ImageDataContainer;
+import com.mreader.LG.ReactNative.PageActivity.BookmarkActivity;
 import com.mreader.LG.ReactNative.PageActivity.HistoryActivity;
+import com.mreader.LG.ReactNative.PageActivity.LibraryActivity;
 import com.mreader.LG.ReactNative.PageActivity.SettingActivity;
+import com.mreader.LG.Utility.ExportData;
+import com.mreader.LG.Utility.ImportData;
+import com.mreader.LG.ViewModel.BookmarksViewModel;
+import com.mreader.LG.ViewModel.ImageViewModel;
 import com.mreader.LG.ViewModel.MenuViewModel;
+import com.mreader.LG.ViewModel.WebViewModel;
 import com.mreader.R;
 
 /**
@@ -27,6 +37,12 @@ import com.mreader.R;
 
 public class MenuFragement extends Fragment {
     private MenuViewModel menuViewModel;
+    private BookmarksViewModel bookmarksViewModel;
+    private ImageViewModel imageViewModel;
+    private WebViewModel webViewModel;
+    private ExportData exportData;
+    private ImportData importData;
+
 
     @Nullable
     @Override
@@ -38,11 +54,15 @@ public class MenuFragement extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         menuViewModel =MenuViewModel.getInstance();
-
+        imageViewModel=new ViewModelProvider(requireActivity()).get(ImageViewModel.class);
+        webViewModel=new ViewModelProvider(requireActivity()).get(WebViewModel.class);
+        exportData=new ExportData(requireContext());
+        importData=new ImportData(requireContext());
+        // Setup menu items
 
 
         // Setup all menu items with their icons and labels
-        setupMenuItem(view.findViewById(R.id.menu_tabs), R.drawable.ic_tabs, "Tabs");
+        setupMenuItem(view.findViewById(R.id.menu_library), R.drawable.ic_library, "Library");
         setupMenuItem(view.findViewById(R.id.menu_bookmarks), R.drawable.ic_bookmarks, "Bookmarks");
         setupMenuItem(view.findViewById(R.id.menu_history), R.drawable.ic_history, "History");
         setupMenuItem(view.findViewById(R.id.menu_read_mode), R.drawable.ic_read_mode, "Read");
@@ -51,8 +71,8 @@ public class MenuFragement extends Fragment {
         setupMenuItem(view.findViewById(R.id.menu_bookmark_add), R.drawable.ic_bookmark_adds, "Add Bookmark");
         setupMenuItem(view.findViewById(R.id.menu_pc), R.drawable.ic_pc, "Desktop");
         setupMenuItem(view.findViewById(R.id.menu_incognito), R.drawable.ic_incongnio, "Incognito");
-        setupMenuItem(view.findViewById(R.id.menu_report), R.drawable.ic_report, "Report");
-        setupMenuItem(view.findViewById(R.id.menu_block), R.drawable.ic_block, "Block");
+        setupMenuItem(view.findViewById(R.id.menu_Export), R.drawable.ic_export, "Export Data");
+        setupMenuItem(view.findViewById(R.id.menu_import), R.drawable.ic_import, "Import Data");
 
         setupMenuItem(view.findViewById(R.id.menu_download), R.drawable.ic_download, "Download");
         setupMenuItem(view.findViewById(R.id.menu_feedback), R.drawable.ic_feedback, "Feedback");
@@ -72,6 +92,7 @@ public class MenuFragement extends Fragment {
 
         // Set icon
         ImageView icon = menuItem.findViewById(R.id.icon);
+
         if (icon != null) {
             icon.setImageResource(iconRes);
         }
@@ -82,7 +103,19 @@ public class MenuFragement extends Fragment {
         if (labelView != null) {
             labelView.setText(label);
         }
-
+        if(label.equals("Read")){
+            menuViewModel.getReadMode().observe(getViewLifecycleOwner(),readMode->{
+                if(readMode){
+                    labelView.setTextColor(Color.parseColor("#2196F3"));
+                    if(!ImageDataContainer.getInstance().isEmpty()){
+                        imageViewModel.setShowImageView(true);
+                    }
+                }
+                else{
+                    labelView.setTextColor(Color.WHITE);
+                }
+            });
+        }
         // Set click listener
         menuItem.setOnClickListener(v -> handleMenuClick(v.getId()));
     }
@@ -112,29 +145,36 @@ public class MenuFragement extends Fragment {
      * @param menuId The ID of the clicked menu item
      */
     private void handleMenuClick(int menuId) {
-        if (menuId == R.id.menu_tabs) {
+        if (menuId == R.id.menu_library) {
             // Handle tabs click
             showToast("Tabs clicked");
+
+            startActivity(new Intent(requireContext(), LibraryActivity.class));
             // TODO: Open tabs activity/fragment
 
         } else if (menuId == R.id.menu_bookmarks) {
             showToast("Bookmarks clicked");
-            // TODO: Open bookmarks activity/fragment
+
+            startActivity(new Intent(requireContext(), BookmarkActivity.class));
 
         } else if (menuId == R.id.menu_history) {
             showToast("History clicked");
-            menuViewModel.setIsMenuOpen(false);
+
             startActivity(new Intent(requireContext(), HistoryActivity.class));
 
         } else if (menuId == R.id.menu_read_mode) {
             showToast("Read Mode clicked");
-            // TODO: Toggle read mode
+            menuViewModel.toggleReadMode();
+
 
         } else if (menuId == R.id.menu_reload) {
             showToast("Reload clicked");
-            // TODO: Reload current page
+            webViewModel.reloadThePage();
 
         } else if (menuId == R.id.menu_bookmark_add) {
+            bookmarksViewModel=new ViewModelProvider(requireActivity()).get(BookmarksViewModel.class);
+            bookmarksViewModel.setAddBookmark(true);
+            menuViewModel.setIsMenuOpen(false);
             showToast("Add Bookmark clicked");
             // TODO: Add current page to bookmarks
 
@@ -146,12 +186,16 @@ public class MenuFragement extends Fragment {
             showToast("Incognito clicked");
             // TODO: Open incognito tab
 
-        } else if (menuId == R.id.menu_report) {
-            showToast("Report clicked");
+        } else if (menuId == R.id.menu_Export) {
+            showToast("Export clicked");
+            //exportData.ExportDialog();
+            exportData.showExportBottomSheet();
             // TODO: Open report dialog
 
-        } else if (menuId == R.id.menu_block) {
-            showToast("Block clicked");
+        } else if (menuId == R.id.menu_import) {
+            showToast("Import clicked");
+            importData.showImportBottomSheet();
+
             // TODO: Block current site
 
         } else if (menuId == R.id.menu_download) {
@@ -180,6 +224,7 @@ public class MenuFragement extends Fragment {
         }
 
         // Dismiss the menu after handling click
+        menuViewModel.setIsMenuOpen(false);
         dismissMenu();
     }
 

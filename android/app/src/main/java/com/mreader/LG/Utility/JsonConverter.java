@@ -45,4 +45,25 @@ public class JsonConverter {
             return null;
         }
     }
+
+    public static <T> List<T> jsonToList(String json, Class<T> cls) {
+        if (json == null) return null;
+
+        String s = json.trim();
+        if (s.isEmpty() || "null".equalsIgnoreCase(s) || "\"\"".equals(s)) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(
+                    s,
+                    objectMapper.getTypeFactory()
+                            .constructCollectionType(List.class, cls)
+            );
+        } catch (Exception e) {
+            e.printStackTrace(); // helpful for debugging
+            return null;
+        }
+    }
+
 }

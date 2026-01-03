@@ -26,10 +26,6 @@
             android:exported="false"
             android:theme="@style/AppTheme" />
 
-        <activity
-            android:name=".LG.PageActivity.LibraryActivity"
-            android:exported="false"
-            android:theme="@style/AppTheme" />
 
         <!-- Main Native Android Activity (Launcher) -->
         <activity
@@ -57,7 +53,17 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".LG.ReactNative.PageActivity.BookmarkActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".LG.ReactNative.PageActivity.SettingActivity"
+            android:exported="false"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+        <activity
+            android:name=".LG.ReactNative.PageActivity.LibraryActivity"
             android:exported="false"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize"

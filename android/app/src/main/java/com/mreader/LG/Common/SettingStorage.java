@@ -58,7 +58,13 @@ public class SettingStorage {
         this.dataModel=dataModel;
         service.updateSetting(dataModel);
     }
-
+    public boolean getReadMode(){
+        return dataModel.getReadMode();
+    }
+    public void setReadMode(boolean readMode) {
+        dataModel.setReadMode(readMode);
+        service.updateReadMode(readMode);
+    }
 
 
 }

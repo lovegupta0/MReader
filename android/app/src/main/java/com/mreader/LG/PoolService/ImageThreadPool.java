@@ -53,14 +53,19 @@ public class ImageThreadPool implements ThreadsPoolManager {
         return instance;
     }
 
-    /** Submit a background task (Runnable). */
+    /**
+     * Submit a background task (Runnable).
+     *
+     * @return
+     */
     @Override
-    public void submitTask(Runnable task) {
+    public Future<Void> submitTask(Runnable task) {
         try {
             executor.execute(task);
         } catch (RejectedExecutionException e) {
             Log.e(TAG, "Task rejected (queue full). Consider increasing capacity.", e);
         }
+        return null;
     }
 
     /** Submit a Callable task (returns a Future). */

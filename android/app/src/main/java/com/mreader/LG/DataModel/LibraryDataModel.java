@@ -12,7 +12,9 @@ public class LibraryDataModel {
     private String pageUrl;
     private String baseUrl;
     private String chapterUrl;
-    private int chapter;
+    private String latestchapter;
+    private String latestChapterUpdated;
+    private String coverUrl;
 
     @ColumnInfo(name="last_updated_date")
     private String LastUpdateddate;
@@ -20,12 +22,11 @@ public class LibraryDataModel {
     public LibraryDataModel() {
     }
 
-    public LibraryDataModel(String title, String pageUrl, String baseUrl, String chapterUrl, int chapter, String lastUpdateddate) {
+    public LibraryDataModel(String title, String pageUrl, String baseUrl, String chapterUrl, String lastUpdateddate) {
         this.title = title;
         this.pageUrl = pageUrl;
         this.baseUrl = baseUrl;
         this.chapterUrl = chapterUrl;
-        this.chapter = chapter;
         LastUpdateddate = lastUpdateddate;
     }
 
@@ -57,13 +58,7 @@ public class LibraryDataModel {
         this.baseUrl = baseUrl;
     }
 
-    public int getChapter() {
-        return chapter;
-    }
 
-    public void setChapter(int chapter) {
-        this.chapter = chapter;
-    }
 
     public String getLastUpdateddate() {
         return LastUpdateddate;
@@ -82,5 +77,29 @@ public class LibraryDataModel {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getLatestchapter() {
+        return latestchapter;
+    }
+
+    public void setLatestchapter(String latestchapter) {
+        this.latestchapter = latestchapter;
+    }
+
+    public String getLatestChapterUpdated() {
+        return latestChapterUpdated;
+    }
+
+    public void setLatestChapterUpdated(String latestChapterUpdated) {
+        this.latestChapterUpdated = latestChapterUpdated;
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
+    }
+
+    public void setCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
     }
 }

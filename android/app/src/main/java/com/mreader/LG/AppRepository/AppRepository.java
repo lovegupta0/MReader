@@ -22,6 +22,7 @@ import com.mreader.LG.DataModel.ViewImageDataModel;
 import com.mreader.LG.PoolService.CentralThreadPool;
 import com.mreader.LG.Utility.ThreadsPoolManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,16 +56,29 @@ public class AppRepository {
         threadsPoolManager.submitTask(()->libraryDao.insertLibrary(data));
     }
 
-    public LiveData<List<LibraryDataModel>> getLibraryData(){
-        return libraryDao.getLibrary();
+    public List<LibraryDataModel> getLibraryData(){
+
+        Future<List<LibraryDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return libraryDao.getLibrary();
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-    public LiveData<List<ImageDataModel>> getImage(){
-        return imageDao.getImage();
+
+
+    public List<BookmarkDataModel> getBookmarks(){
+        Future<List<BookmarkDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return bookmarkDao.getBookmark();
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-    public LiveData<List<ViewImageDataModel>> getViewImage(){
-            return viewImageDao.getViewImage();
-    }
-    public LiveData<List<BookmarkDataModel>> getBookmarks(){return  bookmarkDao.getBookmark();}
     public void insertImage(ImageDataModel img){
         threadsPoolManager.submitTask(()->imageDao.insertImage(img));
     }
@@ -176,8 +190,71 @@ public class AppRepository {
     public void deleteSetting() {
         threadsPoolManager.submitTask(() -> settingDao.insert(new SettingDataModel()));
     }
+    public void updateLibrary(LibraryDataModel data) {
+        threadsPoolManager.submitTask(() -> libraryDao.updateLibrary(data));
+    }
+    public void deleteLibrary(LibraryDataModel data) {
+        threadsPoolManager.submitTask(() -> libraryDao.deleteLibrary(data));
+    }
+    public List<LibraryDataModel> getAllSortedByLastUpdatedDate(){
+        Future<List<LibraryDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return libraryDao.getAllSortedByLastUpdatedDate();
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
+    }
+    public List<LibraryDataModel> getLibraryByChapter(String chapter){
+        Future<List<LibraryDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return libraryDao.getLibraryByChapterUrl(chapter);
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public List<LibraryDataModel> getLibraryByPageUrl(String pageUrl){
+        Future<List<LibraryDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return libraryDao.getLibraryByPageUrl(pageUrl);
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void deleteBookmark(BookmarkDataModel data) {
+        threadsPoolManager.submitTask(() -> {
+            bookmarkDao.deleteBookmark(data);
+        });
+    }
+    public List<BookmarkDataModel> getBookmarkByUrl(String url){
+        Future<List<BookmarkDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return bookmarkDao.getBookmarkByUrl(url);
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateBookmark(BookmarkDataModel data) {
+        threadsPoolManager.submitTask(() -> {
+            bookmarkDao.updateBookmark(data);
+        });
+    }
+
+    public void updateReadMode(boolean readMode){
+        threadsPoolManager.submitTask(()->{
+            settingDao.updateReadMode(readMode);
+        });
+    }
 
 
 }

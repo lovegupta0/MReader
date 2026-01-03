@@ -1,15 +1,14 @@
 package com.mreader.LG.ReactNative.PageActivity;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
-import com.mreader.LG.Middleware.HistoryMiddleware;
+import com.mreader.LG.Middleware.HistoryService;
 import com.mreader.LG.Utility.JsonConverter;
 
 public class HistoryActivity extends ReactActivity {
-    HistoryMiddleware historyMiddleware;
+    HistoryService historyMiddleware;
 
 
     @Override
@@ -20,7 +19,7 @@ public class HistoryActivity extends ReactActivity {
 
     @Override
     protected ReactActivityDelegate createReactActivityDelegate() {
-        historyMiddleware=HistoryMiddleware.getInstance();
+        historyMiddleware= HistoryService.getInstance();
         // Build initial props for JS root (App)
         Bundle launchOptions = new Bundle();
         launchOptions.putString("initialRouteName", "History");

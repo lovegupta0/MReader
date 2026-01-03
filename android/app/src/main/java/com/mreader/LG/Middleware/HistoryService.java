@@ -6,20 +6,20 @@ import com.mreader.LG.Utility.ContextManager;
 
 import java.util.List;
 
-public class HistoryMiddleware {
+public class HistoryService {
 
-    private static HistoryMiddleware instance;
+    private static HistoryService instance;
     private AppRepository repo;
 
-    private HistoryMiddleware(){
+    private HistoryService(){
         repo = AppRepository.getInstance(ContextManager.getInstance().getApplicationMainContext());
     }
 
-    public static HistoryMiddleware getInstance(){
+    public static HistoryService getInstance(){
         if(instance == null){
-            synchronized (HistoryMiddleware.class){
+            synchronized (HistoryService.class){
                 if(instance == null){
-                    instance = new HistoryMiddleware();
+                    instance = new HistoryService();
                 }
             }
         }

@@ -19,11 +19,17 @@ public interface LibraryDao {
     @Delete
     public void deleteLibrary(LibraryDataModel data);
     @Query("select * from lglibrary")
-    public LiveData<List<LibraryDataModel>> getLibrary();
+    public List<LibraryDataModel> getLibrary();
 
     @Update
     public void updateLibrary(LibraryDataModel data);
     @Query("SELECT * FROM LGlibrary ORDER BY last_updated_date DESC")
     List<LibraryDataModel> getAllSortedByLastUpdatedDate();
+    @Query("SELECT * FROM LGlibrary WHERE chapterUrl = :chapterUrl")
+    public List<LibraryDataModel> getLibraryByChapterUrl(String chapterUrl);
+
+    @Query("SELECT * FROM LGlibrary WHERE pageUrl = :pageUrl")
+    public List<LibraryDataModel> getLibraryByPageUrl(String pageUrl);
+
 
 }

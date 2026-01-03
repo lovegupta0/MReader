@@ -19,6 +19,9 @@ public class DataBridgePackage implements ReactPackage {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new DataBridgeModule(reactContext));
         modules.add(new SettingsBridgeModule(reactContext));
+        modules.add(new LibraryBridgeModule(reactContext));
+        modules.add(new HistoryBridgeModule(reactContext));
+        modules.add(new BookmarksBridgeModule(reactContext));
         return modules;
     }
 

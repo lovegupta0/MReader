@@ -10,12 +10,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.mreader.LG.Adapter.LongStripAdapter;
 import com.mreader.LG.DataModel.Page;
+import com.mreader.LG.Middleware.ImageDataContainer;
+import com.mreader.LG.ViewModel.FloatButtonViewModel;
 import com.mreader.R;
 
 import java.util.ArrayList;
@@ -27,6 +31,7 @@ public class LongStripReaderFragment extends Fragment {
     private LongStripAdapter adapter;
     private ArrayList<Page> pages = new ArrayList<>();
     private OnLoadNextChapterListener loadNextChapterListener;
+    private FloatButtonViewModel floatButtonViewModel;
     private boolean isLoadingNextChapter = false;
 
     public interface OnLoadNextChapterListener {
@@ -50,11 +55,22 @@ public class LongStripReaderFragment extends Fragment {
         fabAdd = view.findViewById(R.id.fabAdd);
         adapter = new LongStripAdapter(requireContext(), pages);
         recyclerView.setAdapter(adapter);
-
+        floatButtonViewModel= new ViewModelProvider(requireActivity()).get(FloatButtonViewModel.class);
         fabAdd.setOnClickListener(v -> {
-            Toast.makeText(requireActivity(), "Add button clicked", Toast.LENGTH_SHORT).show();
+            floatButtonViewModel.floatButtonAction();
         });
-
+        floatButtonViewModel.checkForVisibility();
+        floatButtonViewModel.getShowFloatButton().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                if(aBoolean){
+                    fabAdd.show();
+                }
+                else{
+                    fabAdd.hide();
+                }
+            }
+        });
         // Add scroll listener to detect when near the end
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -127,4 +143,12 @@ public class LongStripReaderFragment extends Fragment {
     public int getPageCount() {
         return pages.size();
     }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        ImageDataContainer.getInstance().clear();
+
+    }
+
 }

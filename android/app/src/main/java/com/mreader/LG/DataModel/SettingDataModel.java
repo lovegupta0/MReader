@@ -17,6 +17,7 @@ public class SettingDataModel implements Serializable {
     @PrimaryKey
     @NonNull
     private String id = "LG1000";
+    private boolean readMode=true;
 
     private General generalSection;
     private Privacy privacySection;
@@ -43,6 +44,14 @@ public class SettingDataModel implements Serializable {
 
     public Advanced getAdvancedSection() { return advancedSection; }
     public void setAdvancedSection(Advanced advancedSection) { this.advancedSection = advancedSection; }
+
+    public boolean getReadMode() {
+        return readMode;
+    }
+
+    public void setReadMode(boolean readMode) {
+        this.readMode = readMode;
+    }
 
     @Override
     public String toString() {

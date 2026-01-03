@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="progress" type="id" />
+    <item name="status_text" type="id" />
+    <item name="btn_cancel" type="id" />
+    <item name="btn_export" type="id" />
+</resources>

@@ -41,7 +41,14 @@ public class BookmarkDataModel {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setTitle(String url) {
+        url=url.replace("https://www.","");
+        int pos=url.indexOf(".");
+        if(pos!=-1){
+            url=url.substring(0,pos);
+        }
+        char c=Character.toUpperCase(url.charAt(0));;
+        url=c+url.substring(1);
+        this.title = url;
     }
 }

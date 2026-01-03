@@ -22,11 +22,11 @@
             android:gravity="center">
 
             <include layout="@layout/item_menu_button"
-                android:id="@+id/menu_tabs"
+                android:id="@+id/menu_library"
                 android:tag="tabs"
                 tools:ignore="MissingId"
                 tools:text="Tabs"
-                tools:src="@drawable/ic_tabs" />
+                tools:src="@drawable/ic_library" />
 
             <include layout="@layout/item_menu_button"
                 android:id="@+id/menu_bookmarks"
@@ -72,14 +72,14 @@
                 tools:src="@drawable/ic_incongnio" />
 
             <include layout="@layout/item_menu_button"
-                android:id="@+id/menu_report"
+                android:id="@+id/menu_Export"
                 tools:text="Report"
-                tools:src="@drawable/ic_report" />
+                tools:src="@drawable/ic_export" />
 
             <include layout="@layout/item_menu_button"
-                android:id="@+id/menu_block"
+                android:id="@+id/menu_import"
                 tools:text="Block"
-                tools:src="@drawable/ic_block" />
+                tools:src="@drawable/ic_import" />
         </LinearLayout>
 
         <!-- ===== Third Row ===== -->

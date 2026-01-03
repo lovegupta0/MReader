@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class Chapter implements Parcelable {
+public class Chapter  {
     private static String TAG="Chapter";
     private String title;
     private String id;
@@ -23,12 +23,13 @@ public class Chapter implements Parcelable {
     private List<Page> pages;
     private String currentUrl;
     private String chapterImageUrl;
+    private String pageSource;
 
 
     public Chapter() {
         this.id = UUID.randomUUID().toString();
     }
-    public Chapter(String title, String nextPageUrl, String prevPageUrl, String homeUrl, List<Page> pages, String currentUrl){
+    public Chapter(String title, String nextPageUrl, String prevPageUrl, String homeUrl, List<Page> pages, String currentUrl, String pageSource){
         this();
         this.title = title;
         this.nextPageUrl = nextPageUrl;
@@ -36,18 +37,22 @@ public class Chapter implements Parcelable {
         this.homeUrl = homeUrl;
         this.pages = pages;
         this.currentUrl=currentUrl;
+        this.pageSource=pageSource;
         Log.d(TAG,"Next Chapter URL: "+nextPageUrl);
         Log.d(TAG,"Prev Chapter URL: "+prevPageUrl);
         Log.d(TAG,"Home URL: "+homeUrl);
         Log.d(TAG,"Current URL: "+currentUrl);
         Log.d(TAG,"Title: "+title);
+        Log.d(TAG,"Page Source: "+pageSource);
 
 
     }
     public Chapter(String data,String currentUrl){
         this();
         String[] obj = data.split("~#");
+        Log.d(TAG,"Data: "+data);
         this.homeUrl = obj[0];
+        this.pageSource=obj[1];
          this.title = obj[2];
         String imgSrc = obj[5];
         this.prevPageUrl = obj[4];
@@ -67,48 +72,14 @@ public class Chapter implements Parcelable {
         Log.d(TAG,"Home URL: "+homeUrl);
         Log.d(TAG,"Current URL: "+currentUrl);
         Log.d(TAG,"Title: "+title);
+        Log.d(TAG,"Page Source: "+pageSource);
 
 
     }
 
-    protected Chapter(Parcel in) {
-        title = in.readString();
-        id = in.readString();
-        nextPageUrl = in.readString();
-        prevPageUrl = in.readString();
-        homeUrl = in.readString();
-        pages = new ArrayList<>();
-        currentUrl=in.readString();
-        in.readList(pages, Page.class.getClassLoader());
-    }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(title);
-        dest.writeString(id);
-        dest.writeString(nextPageUrl);
-        dest.writeString(prevPageUrl);
-        dest.writeString(homeUrl);
-        dest.writeList(pages);
-        dest.writeString(currentUrl);
-    }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
-    public static final Creator<Chapter> CREATOR = new Creator<Chapter>() {
-        @Override
-        public Chapter createFromParcel(Parcel in) {
-            return new Chapter(in);
-        }
-
-        @Override
-        public Chapter[] newArray(int size) {
-            return new Chapter[size];
-        }
-    };
 
     public String getTitle() {
         return title;
@@ -164,6 +135,10 @@ public class Chapter implements Parcelable {
 
     public void setCurrentUrl(String currentUrl) {
         this.currentUrl = currentUrl;
+    }
+
+    public String getPageSource() {
+        return pageSource;
     }
 
     public boolean isNextChapter(){

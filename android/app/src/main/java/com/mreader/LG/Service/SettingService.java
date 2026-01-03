@@ -30,4 +30,7 @@ public class SettingService {
     public void deleteSetting() {
         repo.deleteSetting();
     }
+    public void updateReadMode(boolean readMode){
+        repo.updateReadMode(readMode);
+    }
 }

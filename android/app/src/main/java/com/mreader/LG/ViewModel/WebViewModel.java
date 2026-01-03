@@ -5,8 +5,10 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class WebViewModel  extends ViewModel {
-    private MutableLiveData<String> urlAddress=new MutableLiveData<>("https://www.mgeko.cc/reader/en/spirit-mage-expelled-from-the-hero-chapter-1-eng-li/");
+    private MutableLiveData<String> urlAddress=new MutableLiveData<>("https://www.mgeko.cc/");
     private MutableLiveData<Boolean> webRequest=new MutableLiveData<>(false);
+    private MutableLiveData<Boolean> reload=new MutableLiveData<>(false);
+
 
     public void setUrlAddress(String url){
         urlAddress.setValue(url);
@@ -22,4 +24,28 @@ public class WebViewModel  extends ViewModel {
     public LiveData<Boolean> getWebRequest(){
         return webRequest;
     }
+
+    private void toggleReload(){
+        reload.setValue(!reload.getValue());
+        setValueDefault();
+
+    }
+
+    public LiveData<Boolean> getReload(){
+        return reload;
+    }
+
+    public void reloadThePage(){
+        if(urlAddress.getValue().isEmpty()) return;
+        toggleReload();
+    }
+    private void setValueDefault(){
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        reload.setValue(false);
+    }
+
 }

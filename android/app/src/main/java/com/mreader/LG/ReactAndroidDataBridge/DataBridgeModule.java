@@ -13,7 +13,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 public class DataBridgeModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
 
-    private static final String NAME = "DataBridge";
+    private static final String NAME = "CommonDataBridge";
     private final ReactApplicationContext reactContext;
 
     public DataBridgeModule(ReactApplicationContext reactContext) {

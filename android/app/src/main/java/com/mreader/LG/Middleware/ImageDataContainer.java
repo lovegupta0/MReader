@@ -47,5 +47,10 @@ public class ImageDataContainer {
         return model;
     }
 
+    public void clear(){
+        imageModels.clear();
+        model=null;
+    }
+
 
 }

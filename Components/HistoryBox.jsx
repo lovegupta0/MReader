@@ -7,7 +7,9 @@ import {
   Pressable,
   Linking,
   Image,
+  NativeModules,
 } from 'react-native';
+
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -30,7 +32,7 @@ const getDomain = (u) => {
     return '';
   }
 };
-
+const {HistoryBridge} = NativeModules;
 const HistoryBox = ({ url, date }) => {
   const isDark = useColorScheme() === 'dark';
   const themed = isDark ? styles.dark : styles.light;
@@ -41,8 +43,7 @@ const HistoryBox = ({ url, date }) => {
 
   const openLink = async () => {
     try {
-      const canOpen = await Linking.canOpenURL(fullUrl);
-      if (canOpen) Linking.openURL(fullUrl);
+      HistoryBridge.onClickHistory(url);
     } catch {}
   };
 

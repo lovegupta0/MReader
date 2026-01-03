@@ -5,6 +5,7 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import com.mreader.LG.DataModel.BookmarkDataModel;
 
@@ -19,5 +20,11 @@ public interface BookmarkDao {
     public void deleteBookmark(BookmarkDataModel data);
 
     @Query("select * from lgbookmark")
-    public LiveData<List<BookmarkDataModel>> getBookmark();
+    public List<BookmarkDataModel> getBookmark();
+
+    @Query("select * from lgbookmark where address=:url")
+    public List<BookmarkDataModel> getBookmarkByUrl(String url);
+
+    @Update
+    public void updateBookmark(BookmarkDataModel data);
 }

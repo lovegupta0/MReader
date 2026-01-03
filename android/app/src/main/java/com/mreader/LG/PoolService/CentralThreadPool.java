@@ -68,12 +68,13 @@ public class CentralThreadPool implements ThreadsPoolManager {
         return instance;
     }
     @Override
-    public void submitTask(Runnable task) {
+    public Future<Void> submitTask(Runnable task) {
         try {
             executor.execute(task);
         } catch (RejectedExecutionException e) {
             Log.e(TAG, "Task rejected (queue full). Consider increasing capacity.", e);
         }
+        return null;
     }
 
     @Override
