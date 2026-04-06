@@ -17,37 +17,54 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
+            android:id="@+id/search_bar_container"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_search" />
+            <LinearLayout
+                android:id="@+id/top_bar"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/searchURL"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:hint="@string/Hint" />
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_search" />
 
-            <ImageButton
-                android:layout_width="50dp"
-                android:id="@+id/goUrl"
-                android:layout_height="match_parent"
-                android:background="?attr/selectableItemBackground"
-                android:contentDescription="@string/Hint"
-                android:src="@drawable/ic_goto" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/searchURL"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:hint="@string/Hint"
+                    android:imeOptions="actionGo"
+                    android:inputType="textUri"
+                    android:maxLines="1"
+                    android:overScrollMode="never"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:scrollHorizontally="true"
+                    android:singleLine="true" />
 
+                <ImageButton
+                    android:id="@+id/goUrl"
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:background="?attr/selectableItemBackground"
+                    android:contentDescription="@string/Hint"
+                    android:src="@drawable/ic_goto" />
+            </LinearLayout>
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progressbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
         </LinearLayout>
-
-        <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/progressbar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -58,16 +75,7 @@
             <FrameLayout
                 android:id="@+id/frame"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <fragment
-                    android:id="@+id/container"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:name="com.mreader.LG.PageActivity.HomeFragment"
-                    tools:layout="@layout/fragment_home"
-                    />
-            </FrameLayout>
+                android:layout_height="match_parent" />
 
             <!-- Menu Overlay Container -->
             <FrameLayout
@@ -86,37 +94,71 @@
         <LinearLayout
             android:id="@+id/bottom_nav"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/bg_bottom_nav_glass"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="5dp">
 
             <ImageButton
                 android:id="@+id/prev"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:background="@drawable/bg_bottom_nav_item"
                 android:contentDescription="@string/back"
-                android:src="@drawable/ic_prev" />
+                android:padding="6dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_prev"
+                android:tint="#111827" />
             <ImageButton
                 android:id="@+id/next"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:background="@drawable/bg_bottom_nav_item"
                 android:contentDescription="@string/forward"
-                android:src="@drawable/ic_next" />
+                android:padding="6dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_next"
+                android:tint="#111827" />
             <ImageButton
                 android:id="@+id/home"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:background="@drawable/bg_bottom_nav_item_active"
                 android:contentDescription="@string/Home"
-                android:src="@drawable/ic_home" />
+                android:padding="6dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_home"
+                android:tint="#4338CA" />
             <ImageButton
                 android:id="@+id/menu"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:background="@drawable/bg_bottom_nav_item"
                 android:contentDescription="@string/Menu"
-                android:src="@drawable/ic_menu" />
+                android:padding="6dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_menu"
+                android:tint="#111827" />
         </LinearLayout>
     </LinearLayout>
 

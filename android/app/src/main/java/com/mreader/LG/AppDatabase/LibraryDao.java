@@ -10,6 +10,7 @@ import androidx.room.Update;
 import com.mreader.LG.DataModel.LibraryDataModel;
 
 import java.util.List;
+import java.util.Optional;
 
 @Dao
 public interface LibraryDao {
@@ -30,6 +31,11 @@ public interface LibraryDao {
 
     @Query("SELECT * FROM LGlibrary WHERE pageUrl = :pageUrl")
     public List<LibraryDataModel> getLibraryByPageUrl(String pageUrl);
+
+    @Query("UPDATE LGlibrary SET chapterUrl= :chapterUrl WHERE pageUrl = :pageUrl")
+    void updateChapterUrl(String chapterUrl,String pageUrl);
+
+
 
 
 }

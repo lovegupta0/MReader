@@ -10,6 +10,7 @@ public class ImageDataContainer {
     private BlockingQueue<Chapter> imageModels;
 
     private Chapter model;
+    private  Chapter modelV2;
     private ImageDataContainer(){
         imageModels=new LinkedBlockingQueue<>();
     }
@@ -40,16 +41,20 @@ public class ImageDataContainer {
         return model;
     }
 
+
     public void addImageModel(Chapter model) {
         imageModels.add(model);
+        modelV2=model;
     }
     public Chapter getCurrentChapter() {
+        if(model==null) return modelV2;
         return model;
     }
 
     public void clear(){
         imageModels.clear();
         model=null;
+        modelV2=null;
     }
 
 

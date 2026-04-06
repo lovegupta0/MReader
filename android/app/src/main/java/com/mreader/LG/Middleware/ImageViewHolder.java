@@ -2,13 +2,13 @@ package com.mreader.LG.Middleware;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mreader.R;
-import com.mreader.LG.Utility.BitmapUtils;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -25,9 +25,8 @@ public class ImageViewHolder extends RecyclerView.ViewHolder {
         super(itemView);
         imageView = itemView.findViewById(R.id.long_strip_image);
 
-        // CRITICAL: Remove adjustViewBounds - it causes gaps!
-        imageView.setAdjustViewBounds(false);
-        imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+        imageView.setAdjustViewBounds(true);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
         // Set layout params to match parent width
         ViewGroup.LayoutParams params = imageView.getLayoutParams();
@@ -43,9 +42,10 @@ public class ImageViewHolder extends RecyclerView.ViewHolder {
 
     public void bind(android.net.Uri uri) {
         currentUri = uri == null ? null : uri.toString();
-
-        // Get screen width for proper sizing
-        int screenWidth = BitmapUtils.getScreenWidth(imageView.getContext());
+        ViewGroup.LayoutParams params = imageView.getLayoutParams();
+        params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        imageView.setLayoutParams(params);
 
         // Load at ORIGINAL size with maximum quality
         RequestOptions opts = new RequestOptions()
@@ -69,26 +69,49 @@ public class ImageViewHolder extends RecyclerView.ViewHolder {
                     public boolean onResourceReady(android.graphics.Bitmap resource, Object model,
                                                    Target<android.graphics.Bitmap> target,
                                                    DataSource dataSource, boolean isFirstResource) {
-                        // Calculate proper height based on image aspect ratio
-                        imageView.post(() -> {
-                            int imageWidth = resource.getWidth();
-                            int imageHeight = resource.getHeight();
-
-                            // Calculate height to maintain aspect ratio at screen width
-                            float aspectRatio = (float) imageHeight / imageWidth;
-                            int targetHeight = (int) (screenWidth * aspectRatio);
-
-                            // Set exact height to prevent gaps
-                            ViewGroup.LayoutParams params = imageView.getLayoutParams();
-                            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-                            params.height = targetHeight;
-                            imageView.setLayoutParams(params);
-                            imageView.requestLayout();
-                        });
+                        updateHeightForBitmap(resource);
                         return false;
                     }
                 })
                 .into(imageView);
+    }
+
+    private void updateHeightForBitmap(android.graphics.Bitmap resource) {
+        imageView.post(() -> {
+            int availableWidth = itemView.getWidth();
+            if (availableWidth <= 0) {
+                availableWidth = imageView.getWidth();
+            }
+            if (availableWidth <= 0) {
+                ViewTreeObserver observer = itemView.getViewTreeObserver();
+                observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        ViewTreeObserver currentObserver = itemView.getViewTreeObserver();
+                        if (currentObserver.isAlive()) {
+                            currentObserver.removeOnGlobalLayoutListener(this);
+                        }
+                        updateHeightForBitmap(resource);
+                    }
+                });
+                return;
+            }
+
+            int imageWidth = resource.getWidth();
+            int imageHeight = resource.getHeight();
+            if (imageWidth <= 0 || imageHeight <= 0) {
+                return;
+            }
+
+            float aspectRatio = (float) imageHeight / (float) imageWidth;
+            int targetHeight = Math.max(1, Math.round(availableWidth * aspectRatio));
+
+            ViewGroup.LayoutParams params = imageView.getLayoutParams();
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            params.height = targetHeight;
+            imageView.setLayoutParams(params);
+            imageView.requestLayout();
+        });
     }
 
     public void clear() {

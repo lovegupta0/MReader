@@ -2,6 +2,7 @@ package com.mreader.LG.PageActivity;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -23,6 +26,7 @@ import com.mreader.LG.ReactNative.PageActivity.SettingActivity;
 import com.mreader.LG.Utility.ExportData;
 import com.mreader.LG.Utility.ImportData;
 import com.mreader.LG.ViewModel.BookmarksViewModel;
+import com.mreader.LG.ViewModel.FloatButtonViewModel;
 import com.mreader.LG.ViewModel.ImageViewModel;
 import com.mreader.LG.ViewModel.MenuViewModel;
 import com.mreader.LG.ViewModel.WebViewModel;
@@ -42,6 +46,8 @@ public class MenuFragement extends Fragment {
     private WebViewModel webViewModel;
     private ExportData exportData;
     private ImportData importData;
+    private ActivityResultLauncher<String[]> importFilesLauncher;
+    private FloatButtonViewModel floatButtonViewModel;
 
 
     @Nullable
@@ -53,11 +59,28 @@ public class MenuFragement extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        importFilesLauncher = registerForActivityResult(
+                new ActivityResultContracts.OpenMultipleDocuments(),
+                uris -> {
+                    if (uris == null || uris.isEmpty()) {
+                        showToast("No import files selected");
+                        menuViewModel.setIsMenuOpen(false);
+                        dismissMenu();
+                        return;
+                    }
+                    importData.importSelectedFiles(uris);
+                    menuViewModel.setIsMenuOpen(false);
+                    dismissMenu();
+                }
+        );
         menuViewModel =MenuViewModel.getInstance();
         imageViewModel=new ViewModelProvider(requireActivity()).get(ImageViewModel.class);
         webViewModel=new ViewModelProvider(requireActivity()).get(WebViewModel.class);
         exportData=new ExportData(requireContext());
         importData=new ImportData(requireContext());
+        floatButtonViewModel=new ViewModelProvider(requireActivity()).get(FloatButtonViewModel.class);
+
+
         // Setup menu items
 
 
@@ -69,7 +92,7 @@ public class MenuFragement extends Fragment {
         setupMenuItem(view.findViewById(R.id.menu_reload), R.drawable.reload_ic, "Reload");
 
         setupMenuItem(view.findViewById(R.id.menu_bookmark_add), R.drawable.ic_bookmark_adds, "Add Bookmark");
-        setupMenuItem(view.findViewById(R.id.menu_pc), R.drawable.ic_pc, "Desktop");
+        setupMenuItem(view.findViewById(R.id.menu_pc), R.drawable.ic_pc, "Add Library");
         setupMenuItem(view.findViewById(R.id.menu_incognito), R.drawable.ic_incongnio, "Incognito");
         setupMenuItem(view.findViewById(R.id.menu_Export), R.drawable.ic_export, "Export Data");
         setupMenuItem(view.findViewById(R.id.menu_import), R.drawable.ic_import, "Import Data");
@@ -90,35 +113,40 @@ public class MenuFragement extends Fragment {
     private void setupMenuItem(View menuItem, int iconRes, String label) {
         if (menuItem == null) return;
 
-        // Set icon
-        ImageView icon = menuItem.findViewById(R.id.icon);
+        // Make parent clickable
+        menuItem.setClickable(true);
+        menuItem.setFocusable(true);
 
+        // Icon
+        ImageView icon = menuItem.findViewById(R.id.icon);
         if (icon != null) {
             icon.setImageResource(iconRes);
+            icon.setClickable(false);   // ✅ IMPORTANT
+            icon.setFocusable(false);
         }
-        icon.setClickable(true);
 
-        // Set label
+        // Label
         TextView labelView = menuItem.findViewById(R.id.label);
         if (labelView != null) {
             labelView.setText(label);
+            labelView.setClickable(false); // ✅ IMPORTANT
+            labelView.setFocusable(false);
         }
-        if(label.equals("Read")){
-            menuViewModel.getReadMode().observe(getViewLifecycleOwner(),readMode->{
-                if(readMode){
-                    labelView.setTextColor(Color.parseColor("#2196F3"));
-                    if(!ImageDataContainer.getInstance().isEmpty()){
-                        imageViewModel.setShowImageView(true);
-                    }
-                }
-                else{
-                    labelView.setTextColor(Color.WHITE);
+
+        if ("Read".equals(label)) {
+            menuViewModel.getReadMode().observe(getViewLifecycleOwner(), readMode -> {
+                labelView.setTextColor(
+                        readMode ? Color.parseColor("#2196F3") : Color.WHITE
+                );
+                if (readMode && !ImageDataContainer.getInstance().isEmpty()) {
+                    imageViewModel.setShowImageView(true);
                 }
             });
         }
-        // Set click listener
+
         menuItem.setOnClickListener(v -> handleMenuClick(v.getId()));
     }
+
 
     /**
      * Alternative method using string resources instead of hardcoded strings
@@ -145,56 +173,47 @@ public class MenuFragement extends Fragment {
      * @param menuId The ID of the clicked menu item
      */
     private void handleMenuClick(int menuId) {
-        if (menuId == R.id.menu_library) {
-            // Handle tabs click
-            showToast("Tabs clicked");
+        boolean shouldDismissMenu = true;
 
+        if (menuId == R.id.menu_library) {
             startActivity(new Intent(requireContext(), LibraryActivity.class));
             // TODO: Open tabs activity/fragment
 
         } else if (menuId == R.id.menu_bookmarks) {
-            showToast("Bookmarks clicked");
-
             startActivity(new Intent(requireContext(), BookmarkActivity.class));
 
         } else if (menuId == R.id.menu_history) {
-            showToast("History clicked");
 
             startActivity(new Intent(requireContext(), HistoryActivity.class));
 
         } else if (menuId == R.id.menu_read_mode) {
-            showToast("Read Mode clicked");
             menuViewModel.toggleReadMode();
 
 
         } else if (menuId == R.id.menu_reload) {
-            showToast("Reload clicked");
             webViewModel.reloadThePage();
 
         } else if (menuId == R.id.menu_bookmark_add) {
             bookmarksViewModel=new ViewModelProvider(requireActivity()).get(BookmarksViewModel.class);
             bookmarksViewModel.setAddBookmark(true);
             menuViewModel.setIsMenuOpen(false);
-            showToast("Add Bookmark clicked");
-            // TODO: Add current page to bookmarks
+
 
         } else if (menuId == R.id.menu_pc) {
-            showToast("Desktop Mode clicked");
-            // TODO: Toggle desktop/mobile mode
+            floatButtonViewModel.floatButtonAction();
 
         } else if (menuId == R.id.menu_incognito) {
             showToast("Incognito clicked");
             // TODO: Open incognito tab
 
         } else if (menuId == R.id.menu_Export) {
-            showToast("Export clicked");
             //exportData.ExportDialog();
             exportData.showExportBottomSheet();
             // TODO: Open report dialog
 
         } else if (menuId == R.id.menu_import) {
-            showToast("Import clicked");
-            importData.showImportBottomSheet();
+            shouldDismissMenu = false;
+            importData.showImportBottomSheet(() -> importFilesLauncher.launch(new String[]{"*/*"}));
 
             // TODO: Block current site
 
@@ -224,8 +243,10 @@ public class MenuFragement extends Fragment {
         }
 
         // Dismiss the menu after handling click
-        menuViewModel.setIsMenuOpen(false);
-        dismissMenu();
+        if (shouldDismissMenu) {
+            menuViewModel.setIsMenuOpen(false);
+            dismissMenu();
+        }
     }
 
     /**

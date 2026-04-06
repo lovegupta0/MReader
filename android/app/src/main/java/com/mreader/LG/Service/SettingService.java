@@ -1,5 +1,6 @@
 package com.mreader.LG.Service;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.mreader.LG.AppRepository.AppRepository;
@@ -9,7 +10,10 @@ public class SettingService {
     private String TAG="SettingService";
     private AppRepository repo;
     public SettingService(){
-        repo=AppRepository.getInstance();
+        this(null);
+    }
+    public SettingService(Context context){
+        repo = context != null ? AppRepository.getInstance(context) : AppRepository.getInstance();
     }
     public void updateSetting(SettingDataModel data){
         repo.updateSetting(data);

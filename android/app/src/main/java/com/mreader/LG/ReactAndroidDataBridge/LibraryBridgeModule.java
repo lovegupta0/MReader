@@ -17,18 +17,19 @@ import com.facebook.react.bridge.ReactMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mreader.LG.DataModel.LibraryDataModel;
 import com.mreader.LG.ReactNative.PageActivity.LibraryActivity;
+import com.mreader.LG.Service.LibraryService;
 import com.mreader.LG.Utility.ContextManager;
 import com.mreader.LG.Utility.JsonConverter;
 import com.mreader.LG.ViewModel.WebViewModel;
 import com.mreader.MainActivity;
 
 public class LibraryBridgeModule extends ReactContextBaseJavaModule {
-
+    LibraryService service;
 
 
     public LibraryBridgeModule(ReactApplicationContext context) {
         super(context);
-
+        service=LibraryService.getInstance();
 
     }
 
@@ -52,7 +53,6 @@ public class LibraryBridgeModule extends ReactContextBaseJavaModule {
             intent.putExtra("url",item.getPageUrl());
             getReactApplicationContext().startActivity(intent);
 
-            System.out.println("Library item clicked: " + item.getTitle());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,14 +61,7 @@ public class LibraryBridgeModule extends ReactContextBaseJavaModule {
     @ReactMethod void onLibraryItemDelete(String data){
         try {
             LibraryDataModel item =JsonConverter.jsonToObj(data, LibraryDataModel.class);
-
-
-            // 👉 HERE is where you decide what happens
-            // Example: open reader activity
-            // ReaderActivity.open(getReactApplicationContext(), item);
-
-            System.out.println("Library item clicked: " + item.getTitle());
-
+            service.deleteLibrary(item);
         } catch (Exception e) {
             e.printStackTrace();
         }

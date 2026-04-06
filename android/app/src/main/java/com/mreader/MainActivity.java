@@ -1,6 +1,13 @@
 package com.mreader;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
@@ -9,9 +16,11 @@ import androidx.lifecycle.ViewModelProvider;
 import android.Manifest;
 import android.content.Intent;
 import android.database.DatabaseUtils;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.mreader.LG.AppRepository.AppRepository;
@@ -22,6 +31,7 @@ import com.mreader.LG.PageActivity.ImageActivity;
 import com.mreader.LG.PageActivity.MenuFragement;
 import com.mreader.LG.PageActivity.WebFragment;
 import com.mreader.LG.Utility.ContextManager;
+import com.mreader.LG.Utility.LibraryCheckForUpdate;
 import com.mreader.LG.ViewModel.ImageViewModel;
 import com.mreader.LG.ViewModel.MenuViewModel;
 import com.mreader.LG.ViewModel.WebViewModel;
@@ -36,6 +46,7 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -50,17 +61,24 @@ public class MainActivity extends AppCompatActivity {
     private SettingStorage settingStorage;
     private UploadDefaultConfiguration defaultConfiguration;
     private String TAG="MainActivity";
+    private LibraryCheckForUpdate libraryCheckForUpdate;
+    private boolean isSearchBarVisible = true;
+    private ValueAnimator searchBarAnimator;
+    private int searchBarExpandedHeight = -1;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         main=ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(main.getRoot());
-        runTimePermission();
+        setupWindowInsets();
+
         repo=AppRepository.getInstance(this);
         ContextManager.getInstance().setApplicationMainContext(this);
         imageActivity=new Intent(this, ImageActivity.class);
+
         manger= getSupportFragmentManager();
-        menuViewModel=MenuViewModel.getInstance();
         defaultConfiguration=new UploadDefaultConfiguration();
         settingStorage=SettingStorage.getInstance();
         Intent intent=getIntent();
@@ -70,8 +88,7 @@ public class MainActivity extends AppCompatActivity {
         if(savedInstanceState==null){
             manger.beginTransaction().replace(R.id.frame,new HomeFragment()).commit();
         }
-
-
+        init();
         webViewModel=new ViewModelProvider(this).get(WebViewModel.class);
         imgViewModel =new ViewModelProvider(this).get(ImageViewModel.class);
         main.goUrl.setOnClickListener(new View.OnClickListener() {
@@ -86,9 +103,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(Boolean req) {
                 if(req){
+                    setSearchBarVisible(true, false);
                     changeFragment(new WebFragment());
                 }
                 else{
+                    setSearchBarVisible(true, false);
                     changeFragment(new HomeFragment());
                 }
             }
@@ -154,6 +173,8 @@ public class MainActivity extends AppCompatActivity {
         main.home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                webViewModel.setUrlAddress("");
+                setSearchBarVisible(true, false);
                 changeFragment(new HomeFragment());
             }
         });
@@ -162,6 +183,79 @@ public class MainActivity extends AppCompatActivity {
 
     private void changeFragment(Fragment fragment){
         manger.beginTransaction().replace(R.id.frame,fragment).commit();
+    }
+
+    public void setSearchBarVisible(boolean visible, boolean animated) {
+        if (main == null) {
+            return;
+        }
+
+        View container = main.searchBarContainer;
+        container.post(() -> {
+            if (searchBarExpandedHeight < 0) {
+                searchBarExpandedHeight = container.getHeight();
+                if (searchBarExpandedHeight <= 0) {
+                    container.measure(
+                            View.MeasureSpec.makeMeasureSpec(main.linearLayout.getWidth(), View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                    );
+                    searchBarExpandedHeight = container.getMeasuredHeight();
+                }
+            }
+
+            if (searchBarExpandedHeight <= 0) {
+                return;
+            }
+            if (visible == isSearchBarVisible && searchBarAnimator == null) {
+                return;
+            }
+
+            if (searchBarAnimator != null) {
+                searchBarAnimator.cancel();
+            }
+
+            int currentHeight = container.getLayoutParams().height;
+            if (currentHeight <= 0 || currentHeight == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                currentHeight = container.getHeight();
+            }
+            if (currentHeight <= 0) {
+                currentHeight = visible ? 0 : searchBarExpandedHeight;
+            }
+
+            int targetHeight = visible ? searchBarExpandedHeight : 0;
+            if (!animated) {
+                applySearchBarState(container, targetHeight);
+                isSearchBarVisible = visible;
+                return;
+            }
+
+            searchBarAnimator = ValueAnimator.ofInt(currentHeight, targetHeight);
+            searchBarAnimator.setDuration(180);
+            searchBarAnimator.addUpdateListener(animation ->
+                    applySearchBarState(container, (int) animation.getAnimatedValue()));
+            searchBarAnimator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    isSearchBarVisible = visible;
+                    searchBarAnimator = null;
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    searchBarAnimator = null;
+                }
+            });
+            searchBarAnimator.start();
+        });
+    }
+
+    private void applySearchBarState(View container, int height) {
+        ViewGroup.LayoutParams params = container.getLayoutParams();
+        params.height = height;
+        container.setLayoutParams(params);
+        if (searchBarExpandedHeight > 0) {
+            container.setAlpha((float) height / searchBarExpandedHeight);
+        }
     }
 
     private void showMenu() {
@@ -186,17 +280,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void runTimePermission(){
-        Dexter.withContext(this)
-                .withPermissions(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ArrayList<String> permissions = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
+        } else {
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+        }
 
-                ).withListener(new MultiplePermissionsListener() {
+        Dexter.withContext(this)
+                .withPermissions(permissions)
+                .withListener(new MultiplePermissionsListener() {
                                    @Override
                                    public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
-                                       if(multiplePermissionsReport.areAllPermissionsGranted()){
-                                           Toast.makeText(MainActivity.this, "All Permission Granted", Toast.LENGTH_SHORT).show();
-                                       }
+
                                    }
 
                                    @Override
@@ -209,23 +308,55 @@ public class MainActivity extends AppCompatActivity {
                 ).check();
     }
 
+
     @Override
     public void onBackPressed() {
-        // If menu is visible, hide it instead of going back
         if (isMenuVisible) {
             hideMenu();
             return;
         }
 
-        WebFragment web=(WebFragment) manger.findFragmentById(R.id.frame);
-        if(web!=null && web.onBackPressed()){
-            return;
-        }
-        else if (web!=null && web.onBackPressed()==false) {
+        WebFragment web = (WebFragment) manger.findFragmentById(R.id.frame);
+        if (web != null) {
+            boolean handled = web.onBackPressed();
+            if (handled) {
+                return;
+            }
+
             changeFragment(new HomeFragment());
             return;
         }
+
         super.onBackPressed();
+    }
+
+    private void init(){
+        runTimePermission();
+        menuViewModel=MenuViewModel.getInstance();
+        libraryCheckForUpdate=new LibraryCheckForUpdate();
+        libraryCheckForUpdate.updateOnStart();
+    }
+
+    private void setupWindowInsets() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        final int rootStart = main.linearLayout.getPaddingStart();
+        final int rootTop = main.linearLayout.getPaddingTop();
+        final int rootEnd = main.linearLayout.getPaddingEnd();
+        final int rootBottom = main.linearLayout.getPaddingBottom();
+
+        ViewCompat.setOnApplyWindowInsetsListener(main.linearLayout, (view, windowInsets) -> {
+            Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(
+                    rootStart,
+                    rootTop + systemBars.top,
+                    rootEnd,
+                    rootBottom + systemBars.bottom
+            );
+            return WindowInsetsCompat.CONSUMED;
+        });
+
+        ViewCompat.requestApplyInsets(main.linearLayout);
     }
 
 

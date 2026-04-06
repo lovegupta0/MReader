@@ -9,6 +9,7 @@ import com.mreader.LG.DataModel.Page;
 import com.mreader.LG.PoolService.CentralThreadPool;
 import com.mreader.LG.PoolService.PagePool;
 import com.mreader.LG.Service.LibraryService;
+import com.mreader.LG.Utility.LibraryCheckForUpdate;
 import com.mreader.LG.Utility.ThreadsPoolManager;
 import com.mreader.LG.ViewModel.ImageViewModel;
 
@@ -44,6 +45,13 @@ public class WebviewRepoMiddleware {
             String imgSrc = obj[5];
             String prevPage = obj[4];
             String nextPage = obj[3];
+
+            if(libraryService.isExist(pageSource)){
+                libraryService.updateChapterUrl(url,pageSource);
+            }
+            Log.d(TAG,"Running to collect library data through webview");
+            LibraryCheckForUpdate libraryCheckForUpdate=new LibraryCheckForUpdate();
+            libraryCheckForUpdate.checkForUpdate();
 
             PagePool pagePool=PagePool.getInstance();
             String[] img = imgSrc.split(",");

@@ -1,14 +1,16 @@
 package com.mreader.LG.Utility;
 
-import static androidx.core.content.ContentProviderCompat.requireContext;
-
 import android.content.Context;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -25,10 +27,16 @@ import com.mreader.R;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Future;
 
 public class ExportData {
+    private static final String EXPORT_DIRECTORY = Environment.DIRECTORY_DOWNLOADS + "/MReader";
+    private static final String LIBRARY_FILENAME = "ExportedLibraryDataV1.dat";
+    private static final String BOOKMARKS_FILENAME = "ExportedBookmarksDataV1.dat";
     private SettingStorage settingStorage;
     private LibraryService libraryService;
     private BookmarkService bookmarkService;
@@ -103,7 +111,7 @@ public class ExportData {
     private void showExportCompletedDialog() {
         new MaterialAlertDialogBuilder(context)
                 .setTitle("Export Completed")
-                .setMessage("Your data has been exported successfully.")
+                .setMessage("Your data has been exported successfully to Downloads/MReader.")
                 .setPositiveButton("OK", null)
                 .show();
     }
@@ -130,33 +138,78 @@ public class ExportData {
     }
 
     private void export(){
+        try {
+            List<LibraryDataModel> libraryData = libraryService.getLibrary();
+            String libraryJson = JsonConverter.listToJsonSafe(libraryData);
+            Log.d(TAG, libraryJson);
+            writeExportFile(LIBRARY_FILENAME, libraryJson);
 
-
-        String Librarypath=settingStorage.getDownload().getDirectory() + "/ExportedLibraryDataV1.dat";
-        String Bookmarkspath=settingStorage.getDownload().getDirectory() + "/ExportedBookmarksDataV1.dat";
-        File file=new File(settingStorage.getDownload().getDirectory());
-        if(!file.exists()){
-            file.mkdirs();
-        }
-        try(FileWriter writer=new FileWriter(Librarypath)){
-            List<LibraryDataModel> libraryData=libraryService.getLibrary();
-            writer.write(JsonConverter.listToJsonSafe(libraryData));
-            Log.d(TAG,JsonConverter.listToJsonSafe(libraryData));
-            writer.close();
-
-        }
-        catch (Exception e){
+            List<BookmarkDataModel> bookmarkData = bookmarkService.getBookmarks();
+            String bookmarksJson = JsonConverter.listToJsonSafe(bookmarkData);
+            writeExportFile(BOOKMARKS_FILENAME, bookmarksJson);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        try(FileWriter writer=new FileWriter(Bookmarkspath)){
-            List<BookmarkDataModel> bookmarkData=bookmarkService.getBookmarks();
-            writer.write(JsonConverter.listToJsonSafe(bookmarkData));
-            writer.close();
+    }
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    private void writeExportFile(String fileName, String contents) throws IOException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            writeExportFileScoped(fileName, contents);
+            return;
         }
 
+        String exportDirectory = settingStorage.getDownload().getDirectory();
+        File directory = new File(exportDirectory);
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new IOException("Unable to create export directory: " + exportDirectory);
+        }
 
+        File outFile = new File(directory, fileName);
+        try (FileWriter writer = new FileWriter(outFile, false)) {
+            writer.write(contents);
+        }
+    }
+
+    private void writeExportFileScoped(String fileName, String contents) throws IOException {
+        deleteExistingScopedFile(fileName);
+
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        values.put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream");
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, EXPORT_DIRECTORY);
+        values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+
+        Uri uri = context.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+        if (uri == null) {
+            throw new IOException("Unable to create export file in Downloads/MReader");
+        }
+
+        try (OutputStream outputStream = context.getContentResolver().openOutputStream(uri, "w");
+             OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+            if (outputStream == null) {
+                throw new IOException("Unable to open export stream for " + fileName);
+            }
+            writer.write(contents);
+            writer.flush();
+        }
+
+        ContentValues completed = new ContentValues();
+        completed.put(MediaStore.MediaColumns.IS_PENDING, 0);
+        context.getContentResolver().update(uri, completed, null, null);
+    }
+
+    private void deleteExistingScopedFile(String fileName) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return;
+        }
+
+        String selection = MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " +
+                MediaStore.MediaColumns.RELATIVE_PATH + "=?";
+        String[] args = new String[]{fileName, EXPORT_DIRECTORY + "/"};
+        context.getContentResolver().delete(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                selection,
+                args
+        );
     }
 }

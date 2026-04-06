@@ -1,5 +1,8 @@
 package com.mreader.LG.Service;
 
+import android.content.Context;
+import android.util.Log;
+
 import com.mreader.LG.AppRepository.AppRepository;
 import com.mreader.LG.DataModel.LibraryDataModel;
 
@@ -8,15 +11,28 @@ import java.util.List;
 public class LibraryService {
     private static LibraryService instance;
     private AppRepository repo;
-
+    private String TAG="ImportData";
     private LibraryService() {
-        repo=AppRepository.getInstance();
+        this(null);
+    }
+    private LibraryService(Context context) {
+        repo = context != null ? AppRepository.getInstance(context) : AppRepository.getInstance();
     }
     public static LibraryService getInstance() {
         if (instance == null) {
             synchronized (LibraryService.class) {
                 if (instance == null) {
                     instance = new LibraryService();
+                }
+            }
+        }
+        return instance;
+    }
+    public static LibraryService getInstance(Context context) {
+        if (instance == null) {
+            synchronized (LibraryService.class) {
+                if (instance == null) {
+                    instance = new LibraryService(context);
                 }
             }
         }
@@ -59,8 +75,21 @@ public class LibraryService {
     public void insertLibrary(List<LibraryDataModel> lst){
         if(lst==null) return;
         for(LibraryDataModel data:lst){
-            insertLibrary(data);
+            data.setId(0);
+            if(isExist(data.getPageUrl())) continue;
+            try {
+               insertLibrary(data);
+            }
+            catch (Exception e){
+                Log.d(TAG,e.getMessage());
+            }
+
         }
     }
+
+    public void updateChapterUrl(String chapterUrl,String pageUrl){
+        repo.updateChapterUrl(chapterUrl,pageUrl);
+    }
+
 
 }

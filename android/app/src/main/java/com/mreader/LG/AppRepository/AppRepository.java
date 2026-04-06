@@ -116,6 +116,17 @@ public class AppRepository {
         }
 
     }
+    public List<History> getAllHistoryDesc(){
+        Future<List<History>> future=threadsPoolManager.submitTask(()->{
+            return historyDao.getHistory();
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
     public void deleteHistory(History data) {
         threadsPoolManager.submitTask(() -> {
             historyDao.deleteHistory(data);
@@ -217,7 +228,11 @@ public class AppRepository {
             throw new RuntimeException(e);
         }
     }
-
+    public void updateChapterUrl(String chapterUrl,String pageUrl){
+        threadsPoolManager.submitTask(()->{
+            libraryDao.updateChapterUrl(chapterUrl,pageUrl);
+        });
+    }
     public List<LibraryDataModel> getLibraryByPageUrl(String pageUrl){
         Future<List<LibraryDataModel>> future = threadsPoolManager.submitTask(() -> {
             return libraryDao.getLibraryByPageUrl(pageUrl);

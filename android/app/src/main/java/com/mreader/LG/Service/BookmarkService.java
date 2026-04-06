@@ -1,5 +1,7 @@
 package com.mreader.LG.Service;
 
+import android.content.Context;
+
 import androidx.lifecycle.LiveData;
 
 import com.mreader.LG.AppRepository.AppRepository;
@@ -11,6 +13,9 @@ public class BookmarkService {
     private AppRepository repo;
     public BookmarkService(){
         repo=AppRepository.getInstance();
+    }
+    public BookmarkService(Context context){
+        repo=AppRepository.getInstance(context);
     }
     public void insertBookmark(BookmarkDataModel data){
         if(repo.getBookmarkByUrl(data.getAddress()).isEmpty()) repo.insertBookMark(data);

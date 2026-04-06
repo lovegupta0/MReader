@@ -289,6 +289,7 @@ public class PageDataExtracter {
             conn.setConnectTimeout(15000);
             conn.setReadTimeout(30000);
 
+
             int status = conn.getResponseCode();
             Log.d(TAG, "Response Code: " + status);
 

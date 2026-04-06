@@ -23,6 +23,8 @@ import com.mreader.LG.ViewModel.FloatButtonViewModel;
 import com.mreader.R;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class LongStripReaderFragment extends Fragment {
     private static final String TAG = "LongStripReaderFragment";
@@ -33,6 +35,8 @@ public class LongStripReaderFragment extends Fragment {
     private OnLoadNextChapterListener loadNextChapterListener;
     private FloatButtonViewModel floatButtonViewModel;
     private boolean isLoadingNextChapter = false;
+
+
 
     public interface OnLoadNextChapterListener {
         void onLoadNextChapter();
@@ -76,13 +80,13 @@ public class LongStripReaderFragment extends Fragment {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-
                 if (dy > 0) { // Scrolling down
                     int lastVisiblePosition = layoutManager.findLastVisibleItemPosition();
+
                     int totalItemCount = adapter.getItemCount();
 
-                    // Trigger when reaching 2nd last item
                     if (!isLoadingNextChapter && lastVisiblePosition >= totalItemCount - 2) {
+                        //Log.d(TAG, "Last visible position: " + lastVisiblePosition + ", Total items: " + totalItemCount);
                         Log.d(TAG, "Reached 2nd last item, triggering next chapter load");
                         isLoadingNextChapter = true;
                         if (loadNextChapterListener != null) {
@@ -92,6 +96,7 @@ public class LongStripReaderFragment extends Fragment {
                 }
             }
         });
+
     }
 
     public void setPages(ArrayList<Page> pages) {

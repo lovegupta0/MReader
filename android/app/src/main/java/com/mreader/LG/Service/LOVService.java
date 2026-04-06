@@ -1,5 +1,7 @@
 package com.mreader.LG.Service;
 
+import android.content.Context;
+
 import com.mreader.LG.AppRepository.AppRepository;
 import com.mreader.LG.DataModel.LOVDataModel;
 
@@ -7,7 +9,10 @@ import com.mreader.LG.DataModel.LOVDataModel;
 public class LOVService {
     private AppRepository repo;
     public LOVService(){
-        repo=AppRepository.getInstance();
+        this(null);
+    }
+    public LOVService(Context context){
+        repo = context != null ? AppRepository.getInstance(context) : AppRepository.getInstance();
     }
     public void updateLOV(LOVDataModel data) {
         repo.updateLOV(data);

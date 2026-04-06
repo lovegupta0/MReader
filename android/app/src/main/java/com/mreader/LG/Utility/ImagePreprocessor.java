@@ -3,7 +3,6 @@ package com.mreader.LG.Utility;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.util.Log;
 
@@ -44,7 +43,6 @@ public class ImagePreprocessor {
     // === BLOCKING VARIANT ===
     public Uri processBlocking(final Uri sourceUri, final String outFilename, final Callback cb) {
         Bitmap bmp = null;
-        Bitmap cropped = null;
         try {
             File sourceFile;
             if ("http".equalsIgnoreCase(sourceUri.getScheme()) || "https".equalsIgnoreCase(sourceUri.getScheme())) {
@@ -85,23 +83,16 @@ public class ImagePreprocessor {
             Log.d(TAG, "Decoded resolution bitmap: " + bmp.getWidth() + "x" + bmp.getHeight() +
                     " (" + (bmp.getByteCount() / 1024 / 1024) + " MB)");
 
-            // crop
-            Rect crop = detectContentBounds(bmp);
-            if (crop.width() <= 0 || crop.height() <= 0)
-                crop = new Rect(0, 0, bmp.getWidth(), bmp.getHeight());
-
-            cropped = Bitmap.createBitmap(bmp, crop.left, crop.top, crop.width(), crop.height());
-
             // write optimized WEBP
             File out = new File(ctx.getCacheDir(), outFilename);
             try (FileOutputStream fos = new FileOutputStream(out)) {
-                cropped.compress(Bitmap.CompressFormat.WEBP_LOSSY, 85, fos); // slightly better quality
+                bmp.compress(Bitmap.CompressFormat.WEBP_LOSSY, 95, fos); // slightly better quality
             }
 
             // cache bitmap (optional)
             String memKey = sourceUri.toString();
-            if (cropped != null && cacheManager != null)
-                cacheManager.putBitmap(memKey, cropped.copy(cropped.getConfig(), false));
+            if (bmp != null && cacheManager != null)
+                cacheManager.putBitmap(memKey, bmp.copy(bmp.getConfig(), false));
 
             Uri resultUri = Uri.fromFile(out);
             if (cb != null) cb.onSuccess(resultUri);
@@ -114,47 +105,6 @@ public class ImagePreprocessor {
             return null;
         } finally {
             if (bmp != null && !bmp.isRecycled()) bmp.recycle();
-            if (cropped != null && !cropped.isRecycled()) cropped.recycle();
         }
-    }
-
-    // === Helper crop methods ===
-    private Rect detectContentBounds(Bitmap bmp) {
-        int w = bmp.getWidth(), h = bmp.getHeight();
-        int left = 0, right = w - 1, top = 0, bottom = h - 1;
-
-        outerTop:
-        for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++)
-                if (!isBackgroundPixel(bmp.getPixel(x, y))) { top = y; break outerTop; }
-
-        outerBottom:
-        for (int y = h - 1; y >= 0; y--)
-            for (int x = 0; x < w; x++)
-                if (!isBackgroundPixel(bmp.getPixel(x, y))) { bottom = y; break outerBottom; }
-
-        outerLeft:
-        for (int x = 0; x < w; x++)
-            for (int y = top; y <= bottom; y++)
-                if (!isBackgroundPixel(bmp.getPixel(x, y))) { left = x; break outerLeft; }
-
-        outerRight:
-        for (int x = w - 1; x >= 0; x--)
-            for (int y = top; y <= bottom; y++)
-                if (!isBackgroundPixel(bmp.getPixel(x, y))) { right = x; break outerRight; }
-
-        left = Math.max(0, left - 1);
-        top = Math.max(0, top - 1);
-        right = Math.min(w - 1, right + 1);
-        bottom = Math.min(h - 1, bottom + 1);
-
-        return new Rect(left, top, right - left + 1, bottom - top + 1);
-    }
-
-    private boolean isBackgroundPixel(int px) {
-        int r = (px >> 16) & 0xff, g = (px >> 8) & 0xff, b = px & 0xff;
-        boolean nearWhite = r > 245 && g > 245 && b > 245;
-        boolean nearBlack = r < 10 && g < 10 && b < 10;
-        return nearWhite || nearBlack;
     }
 }

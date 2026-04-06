@@ -21,8 +21,8 @@ public class CentralThreadPool implements ThreadsPoolManager {
     private final ThreadPoolExecutor executor;
 
     // Configuration constants — tune as needed
-    private static final int CORE_THREADS = 2;           // minimum threads kept alive
-    private static final int MAX_THREADS = 2;            // fixed pool size for stability
+    private static final int CORE_THREADS = 5;           // minimum threads kept alive
+    private static final int MAX_THREADS = 5;            // fixed pool size for stability
     private static final int QUEUE_CAPACITY = 70;        // how many pending tasks before throttling
     private static final long KEEP_ALIVE_SECONDS = 60L;
     private CentralThreadPool(){

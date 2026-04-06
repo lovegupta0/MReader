@@ -14,6 +14,11 @@ public class BookmarkActivity extends ReactActivity {
     private String TAG="BookmarkActivity";
 
     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(null);
+    }
+
+    @Override
     protected String getMainComponentName() {
         // must match AppRegistry.registerComponent('App', ...)
         return "LGMreader";
@@ -21,20 +26,17 @@ public class BookmarkActivity extends ReactActivity {
 
     @Override
     protected ReactActivityDelegate createReactActivityDelegate() {
-        bookmarkService=new BookmarkService();
-        // Build initial props for JS root (App)
-        Bundle launchOptions = new Bundle();
-        launchOptions.putString("initialRouteName", "Bookmarks");
-        Log.d(TAG, bookmarkService.getBookmarks().toString());
-
-        launchOptions.putString(
-                "data",
-                JsonConverter.listToJsonSafe( bookmarkService.getBookmarks())
-        );
-
         return new ReactActivityDelegate(this, getMainComponentName()) {
             @Override
             protected Bundle getLaunchOptions() {
+                bookmarkService = new BookmarkService(BookmarkActivity.this);
+                Bundle launchOptions = new Bundle();
+                launchOptions.putString("initialRouteName", "Bookmarks");
+                Log.d(TAG, bookmarkService.getBookmarks().toString());
+                launchOptions.putString(
+                        "data",
+                        JsonConverter.listToJsonSafe(bookmarkService.getBookmarks())
+                );
                 return launchOptions;
             }
         };
