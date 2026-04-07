@@ -12,6 +12,7 @@ import com.mreader.LG.AppDatabase.LOVDao;
 import com.mreader.LG.AppDatabase.LibraryDao;
 import com.mreader.LG.AppDatabase.SettingDao;
 import com.mreader.LG.AppDatabase.ViewImageDao;
+import com.mreader.LG.Common.Converters;
 import com.mreader.LG.DataModel.BookmarkDataModel;
 import com.mreader.LG.DataModel.History;
 import com.mreader.LG.DataModel.ImageDataModel;
@@ -22,6 +23,7 @@ import com.mreader.LG.DataModel.ViewImageDataModel;
 import com.mreader.LG.PoolService.CentralThreadPool;
 import com.mreader.LG.Utility.ThreadsPoolManager;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -230,7 +232,7 @@ public class AppRepository {
     }
     public void updateChapterUrl(String chapterUrl,String pageUrl){
         threadsPoolManager.submitTask(()->{
-            libraryDao.updateChapterUrl(chapterUrl,pageUrl);
+            libraryDao.updateChapterUrl(chapterUrl, Converters.fromLocalDateTime(LocalDateTime.now()),pageUrl);
         });
     }
     public List<LibraryDataModel> getLibraryByPageUrl(String pageUrl){

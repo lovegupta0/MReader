@@ -9,6 +9,7 @@ import {
   Platform,
   NativeModules,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GeneralSettings from '../Components/GeneralSettings';
 import PrivacySettings from '../Components/PrivacySettings';
@@ -45,6 +46,7 @@ const SettingsPage = ({ settings, lov }) => {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
     <View style={styles.wrapper}>
       <ScrollView style={styles.container}>
         
@@ -95,6 +97,7 @@ const SettingsPage = ({ settings, lov }) => {
         </Pressable>
       </View>
     </View>
+    </SafeAreaView>
   );
 };
 

@@ -8,12 +8,14 @@ import {
 } from '@react-navigation/native';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Screens
 import HistoryPage from './Pages/HistoryPage';
 import SettingsPage from './Pages/SettingsPage';
 import LibraryPage from './Pages/LibraryPage';
 import BookmarkPage from './Pages/BookmarkPage';
+import ChapterReaderPage from './Pages/ChapterReaderPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,7 +24,7 @@ export default function App(props) {
   const theme = color === 'dark' ? DarkTheme : DefaultTheme;
   console.log(props)
 
-  console.log('App initial props:', props);
+
   
   // ------------------------------
   // Parse shared "data" JSON
@@ -61,6 +63,7 @@ export default function App(props) {
   const initialRouteName = props?.initialRouteName || 'History';
 
   return (
+    <SafeAreaProvider>
     <NavigationContainer theme={theme}>
       <Stack.Navigator initialRouteName={initialRouteName}>
         {/* ---------------- History ---------------- */}
@@ -77,6 +80,13 @@ export default function App(props) {
           options={{ headerShown: false }}
         >
           {() => <LibraryPage data={parsedData} />}
+        </Stack.Screen>
+        {/* ---------------- Reader ---------------- */}
+        <Stack.Screen
+          name="Reader"
+          options={{ headerShown: false }}
+        >
+          {() => <ChapterReaderPage data={parsedData} />}
         </Stack.Screen>
 
         {/* ---------------- Bookmarks ---------------- */}
@@ -105,5 +115,8 @@ export default function App(props) {
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
+
+

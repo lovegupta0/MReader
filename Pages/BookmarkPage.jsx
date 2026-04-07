@@ -10,7 +10,7 @@ import {
   NativeModules
 
 } from 'react-native';
-
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import SearchBox from '../Components/SearchBox';
 import EditBookmarkDialog from '../Components/EditBookmarkDialog';
 const { BookmarksBridge } = NativeModules;
@@ -89,6 +89,7 @@ export default function BookmarkPage({ data = [] }) {
   );
 
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
     <View style={[styles.container, themed.container]}>
       <SearchBox
         value={query}
@@ -119,6 +120,7 @@ export default function BookmarkPage({ data = [] }) {
         onSave={onSaveEdit}
       />
     </View>
+    </SafeAreaView>
   );
 }
 

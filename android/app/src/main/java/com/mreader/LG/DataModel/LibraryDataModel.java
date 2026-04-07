@@ -3,6 +3,9 @@ package com.mreader.LG.DataModel;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.Update;
+
+import javax.annotation.processing.Generated;
 
 @Entity(tableName = "LGlibrary")
 public class LibraryDataModel {

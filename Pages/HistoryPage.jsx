@@ -9,6 +9,7 @@ import {
   Pressable,
   NativeModules,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HistoryBox from '../Components/HistoryBox';
 import SearchBox from '../Components/SearchBox';
@@ -61,6 +62,10 @@ const HistoryPage = ({
   }, [onClearAll]);
 
   return (
+     <SafeAreaView
+      style={{ flex: 1 }}
+      edges={['top', 'bottom']}
+    >
     <View style={[styles.container, themed.container]}>
       {/* Main list area */}
       <FlatList
@@ -119,6 +124,7 @@ const HistoryPage = ({
         </Pressable>
       </View>
     </View>
+    </SafeAreaView>
   );
 };
 

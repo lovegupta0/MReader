@@ -6,6 +6,7 @@ import {
   ActionSheetIOS,
   Platform,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import LibraryHeader from '../Components/LibraryHeader';
 import LibraryCard from '../Components/LibraryCard';
@@ -66,7 +67,9 @@ export default function LibraryPage({ data = [] }) {
         setItems([...items].sort((a, b) => b.title.localeCompare(a.title)));
         break;
       case 2:
+        console.log('Sorting by recently updated');
         setItems(
+          
           [...items].sort(
             (a, b) =>
               new Date(b.lastUpdateddate) -
@@ -92,6 +95,7 @@ export default function LibraryPage({ data = [] }) {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
     <View style={[styles.container, theme.container]}>
       <LibraryHeader
         onSearch={setQuery}
@@ -106,5 +110,6 @@ export default function LibraryPage({ data = [] }) {
         )}
       />
     </View>
+    </SafeAreaView>
   );
 }

@@ -35,7 +35,7 @@ public interface LibraryDao {
     @Query("UPDATE LGlibrary SET chapterUrl= :chapterUrl WHERE pageUrl = :pageUrl")
     void updateChapterUrl(String chapterUrl,String pageUrl);
 
-
-
+    @Query("UPDATE LGlibrary SET chapterUrl = :chapterUrl, last_updated_date = :last_updated_date WHERE pageUrl = :pageUrl")
+    void updateChapterUrl(String chapterUrl,String last_updated_date,String pageUrl);
 
 }
