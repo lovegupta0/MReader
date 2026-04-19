@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -19,6 +19,10 @@ export default function LibraryPage({ data = [] }) {
 
   const [query, setQuery] = useState('');
   const [items, setItems] = useState(data);
+
+  useEffect(() => {
+    setItems(data);
+  }, [data]);
 
   // 🔍 Search filter
   const filtered = useMemo(() => {
@@ -94,6 +98,12 @@ export default function LibraryPage({ data = [] }) {
     }
   };
 
+  const handleItemDelete = (deletedItem) => {
+    setItems((currentItems) =>
+      currentItems.filter((item) => item.id !== deletedItem.id)
+    );
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
     <View style={[styles.container, theme.container]}>
@@ -106,7 +116,11 @@ export default function LibraryPage({ data = [] }) {
         data={filtered}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <LibraryCard item={item} theme={theme} />
+          <LibraryCard
+            item={item}
+            theme={theme}
+            onDelete={handleItemDelete}
+          />
         )}
       />
     </View>

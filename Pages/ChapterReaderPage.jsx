@@ -22,6 +22,7 @@ const { ChapterReaderBridge } = NativeModules;
 
 export default function ChapterReaderPage({ chapter }) {
   const triggeredRef = useRef(false);
+  
 
   /**
    * 🔔 Notify Java to load next chapter

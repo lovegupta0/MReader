@@ -1,5 +1,7 @@
 package com.mreader.LG.PageActivity;
 
+import static com.mreader.LG.Utility.LibraryCheckForUpdate.payload;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -7,12 +9,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.webkit.CookieManager;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -23,12 +28,19 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.mreader.LG.Common.Converters;
+import com.mreader.LG.Common.SettingStorage;
 import com.mreader.LG.DataModel.BookmarkDataModel;
 import com.mreader.LG.DataModel.LibraryDataModel;
+import com.mreader.LG.DataModel.LibraryTempDataModel;
+import com.mreader.LG.DataModel.SettingDataModel;
 import com.mreader.LG.Middleware.HistoryService;
+import com.mreader.LG.Middleware.ImageDataContainer;
 import com.mreader.LG.Middleware.WebviewRepoMiddleware;
 import com.mreader.LG.Service.BookmarkService;
 import com.mreader.LG.Service.LibraryService;
+import com.mreader.LG.Service.LibraryTempService;
+import com.mreader.LG.Utility.AdBlocker;
 import com.mreader.LG.Utility.ContextManager;
 import com.mreader.LG.ViewModel.BookmarksViewModel;
 import com.mreader.LG.ViewModel.ImageViewModel;
@@ -37,11 +49,14 @@ import com.mreader.MainActivity;
 import com.mreader.R;
 import com.mreader.databinding.FragmentWebBinding;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WebFragment extends Fragment {
     private static final int SCROLL_THRESHOLD = 12;
-
+    private static final String TAG = "WebFragment";
     private FragmentWebBinding webBinding;
     private WebViewModel webViewModel;
     private WebviewRepoMiddleware webviewRepoMiddleware;
@@ -53,6 +68,10 @@ public class WebFragment extends Fragment {
     private View popupView;
     private final Handler popupHandler = new Handler(Looper.getMainLooper());
     private int lastScrollY;
+    private LibraryTempService libraryTempService;
+    private SettingStorage setting;
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -65,6 +84,8 @@ public class WebFragment extends Fragment {
         bookmarksViewModel = new ViewModelProvider(requireActivity()).get(BookmarksViewModel.class);
         bookmarkService = new BookmarkService();
         libraryService = LibraryService.getInstance();
+        libraryTempService = LibraryTempService.getInstance();
+        setting=SettingStorage.getInstance();
         webBinding.web.getSettings().setJavaScriptEnabled(true);
 
         CookieManager cookieManager = CookieManager.getInstance();
@@ -74,10 +95,61 @@ public class WebFragment extends Fragment {
         webviewRepoMiddleware = new WebviewRepoMiddleware(imageViewModel);
         ContextManager.getInstance().setWebFragmentContext(requireActivity());
         setupScrollAwareSearchBar();
+        bookmarksViewModel.getAddBookmark().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean shouldAddBookmark) {
+                if (shouldAddBookmark) {
+                    BookmarkDataModel data = new BookmarkDataModel();
+                    String url=webViewModel.getUrlAddress().getValue();
+                    data.setAddress(url);
+                    data.setTitle(url);
+                    bookmarkService.insertBookmark(data);
+                    bookmarksViewModel.setAddBookmark(false);
+                }
+            }
+        });
 
         webBinding.web.setWebViewClient(new WebViewClient() {
             @Override
+            public WebResourceResponse shouldInterceptRequest(
+                    WebView view,
+                    android.webkit.WebResourceRequest request
+            ) {
+                String url = request.getUrl().toString();
+
+                // 🚫 BLOCK ADS
+                if (AdBlocker.isAd(url) && isAdBlockingEnabled()) {
+                    return AdBlocker.emptyResponse();
+                }
+
+                return super.shouldInterceptRequest(view, request);
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                if (AdBlocker.isAd(url) && isAdBlockingEnabled()) {
+                    return true; // 🚫 cancel navigation
+                }
+                return false;
+            }
+
+
+            @Override
+            public void doUpdateVisitedHistory(
+                    WebView view,
+                    String url,
+                    boolean isReload
+            ) {
+                super.doUpdateVisitedHistory(view, url, isReload);
+                if(isReload || url.startsWith("about:") || url.startsWith("chrome:") || !webViewModel.isNavigate()){
+                    webViewModel.toggleNavigate();
+                    return;
+                }
+                submitHistory(url);
+            }
+            @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                webViewModel.loadProgressBar();
                 if (url != webViewModel.getUrlAddress().getValue()) {
                     webViewModel.setUrlAddress(url);
                 }
@@ -92,21 +164,15 @@ public class WebFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                submitHistory(url);
+                webViewModel.hideProgressBar();
                 if (libraryService.isExist(url)) {
                     showContinuePopup();
                 }
 
-                bookmarksViewModel.getAddBookmark().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
-                    @Override
-                    public void onChanged(Boolean shouldAddBookmark) {
-                        if (shouldAddBookmark) {
-                            BookmarkDataModel data = new BookmarkDataModel();
-                            data.setAddress(url);
-                            data.setTitle(url);
-                            bookmarkService.insertBookmark(data);
-                            bookmarksViewModel.setAddBookmark(false);
-                        }
+                    //Log.d(TAG,payload);
+                webBinding.web.evaluateJavascript(payload,value -> {
+                    if (value != null && value.length() > 0) {
+                            setLibraryData(value,url);
                     }
                 });
 
@@ -256,6 +322,19 @@ public class WebFragment extends Fragment {
         webBinding.web.reload();
     }
 
+    private void setLibraryData(String data,String pageUrl){
+       List<String> lst=transformData(data);
+       if(lst.size()==3){
+           LibraryTempDataModel temp=new LibraryTempDataModel();
+           temp.setPageUrl(pageUrl);
+           temp.setCoverUrl(lst.get(0));
+           temp.setLatestchapter(lst.get(1));
+           temp.setLatestChapterUpdated(lst.get(2));
+           temp.setLastUpdateddate(Converters.fromLocalDateTime(LocalDateTime.now()));
+           libraryTempService.updateLibrary(temp);
+       }
+    }
+
     private void setupScrollAwareSearchBar() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return;
@@ -277,10 +356,36 @@ public class WebFragment extends Fragment {
         });
     }
 
+    private boolean isAdBlockingEnabled() {
+        if (setting == null) {
+            return false;
+        }
+
+        SettingDataModel.Performance performance = setting.getPerformance();
+        return performance != null && performance.isBlockAds();
+    }
+
     private void showSearchBar(boolean visible) {
         Activity activity = getActivity();
         if (activity instanceof MainActivity) {
             ((MainActivity) activity).setSearchBarVisible(visible, true);
         }
+    }
+
+    private List<String> transformData(String data){
+        List<String> lstData=new ArrayList<>();
+        data=data.replace("\"","");
+        String[] lst=data.split(",");
+        int pos=data.indexOf("\\n");
+
+        lstData.add(lst[0]);
+
+        if (lst.length > 1) {
+            lstData.add(lst[1].replace("\\n","").trim());
+        }
+        if(lst.length>2){
+            lstData.add(data.substring(pos+3).replace("\\n","").trim());
+        }
+        return lstData;
     }
 }

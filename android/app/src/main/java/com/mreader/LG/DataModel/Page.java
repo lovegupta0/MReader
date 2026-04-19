@@ -5,6 +5,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import com.mreader.LG.Common.SettingStorage;
 import com.mreader.LG.Utility.ImagePreprocessor;
 
 import java.util.concurrent.ExecutionException;
@@ -20,10 +21,13 @@ public class Page implements Parcelable {
     private int height;
 
     private Future<Uri> thread;
+    private SettingStorage setting=SettingStorage.getInstance();
+
 
     public Page(Uri sourceUri) {
         this.sourceUri = sourceUri;
         setId(sourceUri.toString());
+        if(!setting.getReadMode()) return;
         Log.d(TAG,"Processing: "+id);
         ImagePreprocessor imagePreprocessor=new ImagePreprocessor();
         String out ="cache_" + getId() + ".webp";

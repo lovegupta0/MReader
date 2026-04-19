@@ -13,7 +13,7 @@ import { isRecent, getCoverUrl, getSource } from '../utils/libraryUtils';
 
 const { LibraryBridge } = NativeModules;
 
-export default function LibraryCard({ item, theme }) {
+export default function LibraryCard({ item, theme, onDelete }) {
   const isNew = isRecent(item.lastUpdateddate);
   console.log('Cover URL:'+ item.coverUrl);
   const onPress = () => {
@@ -32,10 +32,12 @@ export default function LibraryCard({ item, theme }) {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () =>
+          onPress: () => {
             LibraryBridge.onLibraryItemDelete(
               JSON.stringify(item)
-            ),
+            );
+            onDelete?.(item);
+          },
         },
         { text: 'Cancel' },
       ]

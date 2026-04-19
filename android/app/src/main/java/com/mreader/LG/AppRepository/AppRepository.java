@@ -10,6 +10,7 @@ import com.mreader.LG.AppDatabase.HistoryDao;
 import com.mreader.LG.AppDatabase.ImageDao;
 import com.mreader.LG.AppDatabase.LOVDao;
 import com.mreader.LG.AppDatabase.LibraryDao;
+import com.mreader.LG.AppDatabase.LibraryTempDao;
 import com.mreader.LG.AppDatabase.SettingDao;
 import com.mreader.LG.AppDatabase.ViewImageDao;
 import com.mreader.LG.Common.Converters;
@@ -18,6 +19,7 @@ import com.mreader.LG.DataModel.History;
 import com.mreader.LG.DataModel.ImageDataModel;
 import com.mreader.LG.DataModel.LOVDataModel;
 import com.mreader.LG.DataModel.LibraryDataModel;
+import com.mreader.LG.DataModel.LibraryTempDataModel;
 import com.mreader.LG.DataModel.SettingDataModel;
 import com.mreader.LG.DataModel.ViewImageDataModel;
 import com.mreader.LG.PoolService.CentralThreadPool;
@@ -26,6 +28,7 @@ import com.mreader.LG.Utility.ThreadsPoolManager;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -40,6 +43,7 @@ public class AppRepository {
     private final ThreadsPoolManager threadsPoolManager;
     private final LOVDao lovDao;
     private final SettingDao settingDao;
+    private final LibraryTempDao libraryTempDao;
 
     private static AppRepository instance;
     private AppRepository(Context context){
@@ -52,6 +56,7 @@ public class AppRepository {
         threadsPoolManager= CentralThreadPool.getInstance();
         lovDao=database.lovDao();
         settingDao =database.settingDao();
+        libraryTempDao=database.libraryTempDao();
 
     }
     public void insertLibrary(LibraryDataModel data){
@@ -145,6 +150,16 @@ public class AppRepository {
             historyDao.insertHistory(data);
         });
     }
+    public List<History> getRecentHistory(int limit){
+        Future<List<History>> future=threadsPoolManager.submitTask(()-> {
+            return historyDao.getRecentHistory(limit);
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static AppRepository getInstance(Context context){
         if(instance==null){
@@ -201,7 +216,7 @@ public class AppRepository {
         threadsPoolManager.submitTask(() -> lovDao.deleteLOV());
     }
     public void deleteSetting() {
-        threadsPoolManager.submitTask(() -> settingDao.insert(new SettingDataModel()));
+        threadsPoolManager.submitTask(settingDao::deleteAll);
     }
     public void updateLibrary(LibraryDataModel data) {
         threadsPoolManager.submitTask(() -> libraryDao.updateLibrary(data));
@@ -272,6 +287,59 @@ public class AppRepository {
             settingDao.updateReadMode(readMode);
         });
     }
+
+    public void insertLibraryTemp(LibraryTempDataModel data){
+        threadsPoolManager.submitTask(()->libraryTempDao.insertLibrary(data));
+    }
+    public void updateLibraryTemp(LibraryTempDataModel data){
+        threadsPoolManager.submitTask(()->libraryTempDao.updateLibrary(data));
+    }
+    public List<LibraryTempDataModel> getLibraryTemp(){
+        Future<List<LibraryTempDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return libraryTempDao.getLibrary();
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public void deleteLibraryTemp(LibraryTempDataModel data){
+        threadsPoolManager.submitTask(()->libraryTempDao.deleteLibrary(data));
+    }
+    public List<LibraryTempDataModel> getLibraryTempByLastUpdatedDate(String givenDate){
+        Future<List<LibraryTempDataModel>> future = threadsPoolManager.submitTask(() -> {
+            return libraryTempDao.getLibraryByLastUpdatedDate(givenDate);
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public LibraryTempDataModel getLibraryTempByPageUrl(String pageUrl){
+        Future<LibraryTempDataModel> future = threadsPoolManager.submitTask(() -> {
+            return libraryTempDao.getLibraryByPageUrl(pageUrl);
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public void deleteOlderOne(){
+        String cutoffDate = LocalDateTime.now()
+                .minusWeeks(1)
+                .toString();
+        threadsPoolManager.submitTask(()->{
+            libraryTempDao.deleteOldOne(cutoffDate);
+        });
+    }
+
+
 
 
 }

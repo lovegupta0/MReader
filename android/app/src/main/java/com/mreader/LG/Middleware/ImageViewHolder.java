@@ -51,7 +51,7 @@ public class ImageViewHolder extends RecyclerView.ViewHolder {
         RequestOptions opts = new RequestOptions()
                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                 .dontTransform()
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .skipMemoryCache(false);
 
         Glide.with(imageView.getContext())

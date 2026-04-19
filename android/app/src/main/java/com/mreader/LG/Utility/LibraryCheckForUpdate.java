@@ -6,11 +6,14 @@ import com.mreader.LG.Common.Converters;
 import com.mreader.LG.Common.PageDataExtracter;
 import com.mreader.LG.Common.WebRequest;
 import com.mreader.LG.DataModel.LibraryDataModel;
+import com.mreader.LG.DataModel.LibraryTempDataModel;
 import com.mreader.LG.PoolService.CentralThreadPool;
 import com.mreader.LG.Service.LibraryService;
+import com.mreader.LG.Service.LibraryTempService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
@@ -23,6 +26,8 @@ public class LibraryCheckForUpdate {
     private boolean isRunning;
     private boolean blockedForSession;
     private ThreadsPoolManager threadsPoolManager;
+    private LibraryTempService libraryTempService;
+
 
     public static final String payload =
             "(function() {"
@@ -53,6 +58,7 @@ public class LibraryCheckForUpdate {
         libraryService = LibraryService.getInstance();
         headlessBrowser = HeadlessBrowser.getInstance();
         threadsPoolManager=CentralThreadPool.getInstance();
+        libraryTempService=LibraryTempService.getInstance();
     }
 
     public void checkForUpdate() {
@@ -98,7 +104,7 @@ public class LibraryCheckForUpdate {
         }
 
         try {
-            headlessBrowser.fetchData(pageUrl, payload, new HeadlessBrowser.callback() {
+            headlessBrowser.fetchData(pageUrl, payload, new HeadlessBrowser.Callback() {
                 @Override
                 public void onSuccess(String extractedData) {
                     if (extractedData == null || extractedData.isEmpty()) {
@@ -147,6 +153,10 @@ public class LibraryCheckForUpdate {
                 if(isTodayUpdated(libraryItem.getLastUpdateddate())) return;
                 try {
                    List<String> lst= PageDataExtracter.ExtractDataForChapter(WebRequest.fetchPageHTML(pageUrl,homeUrl),homeUrl);
+                   if(lst.size()<3){
+                       lst.clear();
+                       lst.addAll(checkForData(pageUrl,libraryItem.getLatestchapter()));
+                   }
                     libraryItem.setCoverUrl(lst.get(0));
                     libraryItem.setLatestchapter(lst.get(1));
                     libraryItem.setLatestChapterUpdated(lst.get(2));
@@ -156,10 +166,21 @@ public class LibraryCheckForUpdate {
                     Log.d(TAG,e.getMessage());
                 }
             });
-
-
+            libraryTempService.deleteOlderOne();
         });
 
+    }
+
+    private List<String> checkForData(String data,String validate){
+        List<String> lst=new ArrayList<>();
+        if(libraryTempService.isExist(data)){
+            LibraryTempDataModel temp=libraryTempService.getLibraryByPageUrl(data);
+            if(temp.getLatestchapter().equals(validate)) return lst;
+            lst.add(temp.getCoverUrl());
+            lst.add(temp.getLatestchapter());
+            lst.add(temp.getLatestChapterUpdated());
+        }
+        return lst;
     }
 
     private void updateLibrary(String data,String pageUrl){

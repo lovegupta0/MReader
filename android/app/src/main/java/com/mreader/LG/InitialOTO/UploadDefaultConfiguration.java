@@ -1,5 +1,6 @@
 package com.mreader.LG.InitialOTO;
 
+import com.mreader.LG.Common.SettingStorage;
 import com.mreader.LG.DataModel.LOVDataModel;
 import com.mreader.LG.DataModel.SettingDataModel;
 import com.mreader.LG.Service.LOVService;
@@ -41,6 +42,7 @@ public class UploadDefaultConfiguration {
         // Create & insert Settings from LOV
         settings = createDefaultSettingsFromLOV(lov);
         settingService.insertSetting(settings);
+        SettingStorage.getInstance().update(settings);
     }
 
     /** Build the default LOV record. */

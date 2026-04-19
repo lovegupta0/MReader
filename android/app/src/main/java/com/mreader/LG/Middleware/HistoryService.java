@@ -67,6 +67,9 @@ public class HistoryService {
     public List<History> getAllHistoryDesc(){
         return repo.getAllHistoryDesc();
     }
+    public List<History> getRecentHistory(int limit){
+        return repo.getRecentHistory(limit);
+    }
 }
 
 

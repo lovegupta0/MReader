@@ -1,7 +1,11 @@
 package com.mreader.LG.Middleware;
 
+import android.util.Log;
+
 import com.mreader.LG.DataModel.Chapter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -11,8 +15,11 @@ public class ImageDataContainer {
 
     private Chapter model;
     private  Chapter modelV2;
+
+    private final String TAG="ImageDataContainer";
     private ImageDataContainer(){
         imageModels=new LinkedBlockingQueue<>();
+
     }
 
     public static ImageDataContainer getInstance(){
@@ -56,6 +63,8 @@ public class ImageDataContainer {
         model=null;
         modelV2=null;
     }
+
+
 
 
 }

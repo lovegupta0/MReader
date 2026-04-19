@@ -13,6 +13,7 @@ import com.mreader.LG.DataModel.History;
 import com.mreader.LG.DataModel.ImageDataModel;
 import com.mreader.LG.DataModel.LOVDataModel;
 import com.mreader.LG.DataModel.LibraryDataModel;
+import com.mreader.LG.DataModel.LibraryTempDataModel;
 import com.mreader.LG.DataModel.SettingDataModel;
 import com.mreader.LG.DataModel.ViewImageDataModel;
 
@@ -24,7 +25,8 @@ import com.mreader.LG.DataModel.ViewImageDataModel;
                 ViewImageDataModel.class,
                 History.class,
                 LOVDataModel.class,
-                SettingDataModel.class
+                SettingDataModel.class,
+                LibraryTempDataModel.class
         },
         version = 1,
         exportSchema = false
@@ -41,6 +43,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract HistoryDao historyDao();
     public abstract LOVDao lovDao();
     public abstract SettingDao settingDao();
+    public abstract LibraryTempDao libraryTempDao();
+
 
 
 

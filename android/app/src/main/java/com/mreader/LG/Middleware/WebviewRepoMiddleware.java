@@ -2,8 +2,10 @@ package com.mreader.LG.Middleware;
 
 import android.util.Log;
 
+import com.mreader.LG.Common.Converters;
 import com.mreader.LG.Common.PageDataExtracter;
 import com.mreader.LG.DataModel.Chapter;
+import com.mreader.LG.DataModel.History;
 import com.mreader.LG.DataModel.LibraryDataModel;
 import com.mreader.LG.DataModel.Page;
 import com.mreader.LG.PoolService.CentralThreadPool;
@@ -13,6 +15,7 @@ import com.mreader.LG.Utility.LibraryCheckForUpdate;
 import com.mreader.LG.Utility.ThreadsPoolManager;
 import com.mreader.LG.ViewModel.ImageViewModel;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -24,12 +27,14 @@ public class WebviewRepoMiddleware {
     private LibraryService libraryService;
     private static String TAG = "WebviewRepoMiddleware";
     private ThreadsPoolManager poolManager;
+    private HistoryService historyService;
 
     public WebviewRepoMiddleware(ImageViewModel imageViewModel) {
         this.imageViewModel = imageViewModel;
         this.imageDataContainer = ImageDataContainer.getInstance();
         libraryService=LibraryService.getInstance();
         poolManager= CentralThreadPool.getInstance();
+        historyService=HistoryService.getInstance();
     }
 
     public void addviewImageList(String str, String url) {
@@ -45,13 +50,14 @@ public class WebviewRepoMiddleware {
             String imgSrc = obj[5];
             String prevPage = obj[4];
             String nextPage = obj[3];
-
-            if(libraryService.isExist(pageSource)){
+            List<History> recent=historyService.getRecentHistory(1);
+            Log.d(TAG,recent.toString());
+            if(libraryService.isExist(pageSource) && recent.size()>0 && recent.get(0).getUrl().equals(url)){
                 libraryService.updateChapterUrl(url,pageSource);
             }
             Log.d(TAG,"Running to collect library data through webview");
             LibraryCheckForUpdate libraryCheckForUpdate=new LibraryCheckForUpdate();
-            libraryCheckForUpdate.checkForUpdate();
+           // libraryCheckForUpdate.checkForUpdate();
 
             PagePool pagePool=PagePool.getInstance();
             String[] img = imgSrc.split(",");
@@ -76,6 +82,9 @@ public class WebviewRepoMiddleware {
      * This can be called when user scrolls near the end
      */
     public String getNextPageUrl(Chapter currentChapter) {
+        if(currentChapter != null && currentChapter.getNextPageUrl() != null && currentChapter.getNextPageUrl().contains(currentChapter.getCurrentUrl())){
+            return null;
+        }
         if (currentChapter != null) {
             return currentChapter.getNextPageUrl();
         }
@@ -98,6 +107,7 @@ public class WebviewRepoMiddleware {
         if(libraryService.isExist(url)){
             List<LibraryDataModel> lst=libraryService.getLibraryByUrl(url);
             LibraryDataModel data=lst.get(0);
+            data.setLastUpdateddate(Converters.fromLocalDateTime(LocalDateTime.now()));
             data.setChapterUrl(nextChapter);
             libraryService.updateLibrary(data);
         }

@@ -1,6 +1,8 @@
 package com.mreader.LG.PageActivity;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,11 +25,10 @@ import com.mreader.LG.ViewModel.FloatButtonViewModel;
 import com.mreader.R;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 public class LongStripReaderFragment extends Fragment {
     private static final String TAG = "LongStripReaderFragment";
+    private static final long BOTTOM_RECHECK_DELAY_MS = 180L;
     private RecyclerView recyclerView;
     private ExtendedFloatingActionButton fabAdd;
     private LongStripAdapter adapter;
@@ -35,6 +36,34 @@ public class LongStripReaderFragment extends Fragment {
     private OnLoadNextChapterListener loadNextChapterListener;
     private FloatButtonViewModel floatButtonViewModel;
     private boolean isLoadingNextChapter = false;
+    private final Handler scrollHandler = new Handler(Looper.getMainLooper());
+    private final Runnable bottomCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!isAdded() || recyclerView == null || adapter == null) {
+                return;
+            }
+
+            int totalItemCount = adapter.getItemCount();
+            if (totalItemCount == 0 || isLoadingNextChapter) {
+                return;
+            }
+
+            boolean isAtBottom = !recyclerView.canScrollVertically(1);
+            int scrollOffset = recyclerView.computeVerticalScrollOffset();
+            int scrollExtent = recyclerView.computeVerticalScrollExtent();
+            int scrollRange = recyclerView.computeVerticalScrollRange();
+            boolean hasReachedScrollableEnd = scrollOffset + scrollExtent >= scrollRange - 8;
+
+            if (isAtBottom || hasReachedScrollableEnd) {
+                Log.d(TAG, "Reached end of strip, triggering next chapter load");
+                isLoadingNextChapter = true;
+                if (loadNextChapterListener != null) {
+                    loadNextChapterListener.onLoadNextChapter();
+                }
+            }
+        }
+    };
 
 
 
@@ -80,19 +109,9 @@ public class LongStripReaderFragment extends Fragment {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0) { // Scrolling down
-                    int lastVisiblePosition = layoutManager.findLastVisibleItemPosition();
-
-                    int totalItemCount = adapter.getItemCount();
-
-                    if (!isLoadingNextChapter && lastVisiblePosition >= totalItemCount - 2) {
-                        //Log.d(TAG, "Last visible position: " + lastVisiblePosition + ", Total items: " + totalItemCount);
-                        Log.d(TAG, "Reached 2nd last item, triggering next chapter load");
-                        isLoadingNextChapter = true;
-                        if (loadNextChapterListener != null) {
-                            loadNextChapterListener.onLoadNextChapter();
-                        }
-                    }
+                if (dy > 0 && !isLoadingNextChapter) {
+                    scrollHandler.removeCallbacks(bottomCheckRunnable);
+                    scrollHandler.postDelayed(bottomCheckRunnable, BOTTOM_RECHECK_DELAY_MS);
                 }
             }
         });
@@ -140,6 +159,7 @@ public class LongStripReaderFragment extends Fragment {
      */
     public void resetLoadingState() {
         isLoadingNextChapter = false;
+        scrollHandler.removeCallbacks(bottomCheckRunnable);
     }
 
     /**
@@ -151,6 +171,7 @@ public class LongStripReaderFragment extends Fragment {
 
     @Override
     public void onDestroy(){
+        scrollHandler.removeCallbacks(bottomCheckRunnable);
         super.onDestroy();
         ImageDataContainer.getInstance().clear();
 

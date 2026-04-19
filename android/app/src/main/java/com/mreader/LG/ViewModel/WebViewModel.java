@@ -8,7 +8,8 @@ public class WebViewModel  extends ViewModel {
     private MutableLiveData<String> urlAddress=new MutableLiveData<>("");
     private MutableLiveData<Boolean> webRequest=new MutableLiveData<>(false);
     private MutableLiveData<Boolean> reload=new MutableLiveData<>(false);
-
+    private MutableLiveData<Boolean> loadProgressBar=new MutableLiveData<>(false);
+    boolean isNavigate = false;
 
     public void setUrlAddress(String url){
         urlAddress.setValue(url);
@@ -46,6 +47,21 @@ public class WebViewModel  extends ViewModel {
             throw new RuntimeException(e);
         }
         reload.setValue(false);
+    }
+    public LiveData<Boolean> getLoadProgressBar(){
+        return loadProgressBar;
+    }
+    public void loadProgressBar(){
+        loadProgressBar.setValue(true);
+    }
+    public void hideProgressBar(){
+        loadProgressBar.setValue(false);
+    }
+    public boolean isNavigate(){
+        return isNavigate;
+    }
+    public void toggleNavigate(){
+        this.isNavigate= !this.isNavigate;
     }
 
 }

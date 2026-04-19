@@ -15,9 +15,11 @@ import com.mreader.LG.Common.PageDataExtracter;
 import com.mreader.LG.Common.WebRequest;
 import com.mreader.LG.DataModel.Chapter;
 import com.mreader.LG.DataModel.LibraryDataModel;
+import com.mreader.LG.DataModel.LibraryTempDataModel;
 import com.mreader.LG.Middleware.ImageDataContainer;
 import com.mreader.LG.PoolService.CentralThreadPool;
 import com.mreader.LG.Service.LibraryService;
+import com.mreader.LG.Service.LibraryTempService;
 import com.mreader.LG.Utility.HeadlessBrowser;
 import com.mreader.LG.Utility.ThreadsPoolManager;
 
@@ -34,6 +36,7 @@ public class FloatButtonViewModel extends AndroidViewModel {
     private final String TAG="FloatButtonViewModel";
     private ThreadsPoolManager threadsPoolManager;
     private final HeadlessBrowser headlessBrowser;
+    private LibraryTempService libraryTempService;
 
     public FloatButtonViewModel(@NonNull Application application) {
         super(application);
@@ -41,6 +44,7 @@ public class FloatButtonViewModel extends AndroidViewModel {
         service=LibraryService.getInstance();
         threadsPoolManager=CentralThreadPool.getInstance();
         headlessBrowser=HeadlessBrowser.getInstance();
+        libraryTempService=LibraryTempService.getInstance();
     }
 
     public void setShowFloatButton(boolean show) {
@@ -52,6 +56,9 @@ public class FloatButtonViewModel extends AndroidViewModel {
         return showFloatButton;
     }
     public void floatButtonAction(){
+        try {
+
+
         LibraryDataModel data=new LibraryDataModel();
         Chapter currentChapter=imageDataContainer.getCurrentChapter();
         if(currentChapter==null || service.isExist(currentChapter.getPageSource())){
@@ -60,15 +67,9 @@ public class FloatButtonViewModel extends AndroidViewModel {
         }
 
         List<String> lst=new ArrayList<>();
-        try {
-            lst.addAll(fetchData(currentChapter));
-        } catch (Exception e) {
-           Log.d(TAG,e.getMessage());
-        }
-        if(lst.isEmpty()){
-
-        }
+        lst.addAll(fetchData(currentChapter));
         Log.d(TAG,"List: "+lst.toString());
+        if(lst.isEmpty()) return;
         data.setPageUrl(currentChapter.getPageSource());
         data.setBaseUrl(currentChapter.getHomeUrl());
         data.setTitle(currentChapter.getTitle());
@@ -80,6 +81,9 @@ public class FloatButtonViewModel extends AndroidViewModel {
         service.insertLibrary(data);
         Toast.makeText(getApplication(), "Library added", Toast.LENGTH_SHORT).show();
         setShowFloatButton(false);
+        } catch (Exception e) {
+            Log.d(TAG,e.getMessage());
+        }
     }
     public void checkForVisibility(){
         Chapter currentChapter=imageDataContainer.getCurrentChapter();
@@ -91,44 +95,27 @@ public class FloatButtonViewModel extends AndroidViewModel {
 
     private List<String> fetchData(Chapter currentChapter){
         Future<List<String>> future=threadsPoolManager.submitTask(()->PageDataExtracter.ExtractDataForChapter(WebRequest.fetchPageHTML(currentChapter.getPageSource(),currentChapter.getHomeUrl()),currentChapter.getHomeUrl()));
+        List<String> lst=new ArrayList();
         try {
-            return future.get();
+            lst.addAll(future.get());
+            if(lst.size()<3) lst.clear();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+           Log.d(TAG,e.getMessage());
         }
+
+        if(lst.isEmpty()) lst.addAll(fetchDataV2(currentChapter));
+        return lst;
     }
 
     private List<String> fetchDataV2(Chapter currentChapter){
-        String pageUrl=currentChapter.getPageSource();
-        List<String> data=new ArrayList<>();
-        try {
-            headlessBrowser.fetchData(pageUrl, payload, new HeadlessBrowser.callback() {
-                @Override
-                public void onSuccess(String extractedData) {
-                    if (extractedData == null || extractedData.isEmpty()) {
-                        Log.w(TAG, "Empty update response for " + pageUrl);
-
-                    } else if ("[\"BLOCKED\"]".equals(extractedData)) {
-                        Log.w(TAG, "Cloudflare blocked update check for " + pageUrl);
-
-                    } else {
-                        Log.d(TAG, "Fetched update data for " + pageUrl + ": " + extractedData);
-                        data.addAll(transformData(extractedData));
-
-                    }
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    Log.e(TAG, "Update check failed for " + pageUrl, e);
-
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "Unable to start update check for " + pageUrl, e);
-
+        List<String> lst=new ArrayList<>();
+        if(libraryTempService.isExist(currentChapter.getPageSource())){
+            LibraryTempDataModel temp=libraryTempService.getLibraryByPageUrl(currentChapter.getPageSource());
+            lst.add(temp.getCoverUrl());
+            lst.add(temp.getLatestchapter());
+            lst.add(temp.getLatestChapterUpdated());
         }
-        return data;
+        return lst;
     }
 
     private List<String> transformData(String data){

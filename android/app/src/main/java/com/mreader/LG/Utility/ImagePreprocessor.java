@@ -74,7 +74,7 @@ public class ImagePreprocessor {
             }
 
             BitmapFactory.Options opts = new BitmapFactory.Options();
-            opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            opts.inPreferredConfig = Bitmap.Config.RGB_565;
             opts.inDither = true;
             opts.inSampleSize = inSample;
 
@@ -86,7 +86,7 @@ public class ImagePreprocessor {
             // write optimized WEBP
             File out = new File(ctx.getCacheDir(), outFilename);
             try (FileOutputStream fos = new FileOutputStream(out)) {
-                bmp.compress(Bitmap.CompressFormat.WEBP_LOSSY, 95, fos); // slightly better quality
+                bmp.compress(Bitmap.CompressFormat.WEBP_LOSSY, 90, fos); // slightly better quality
             }
 
             // cache bitmap (optional)

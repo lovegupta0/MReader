@@ -203,7 +203,7 @@ public class MenuFragement extends Fragment {
             floatButtonViewModel.floatButtonAction();
 
         } else if (menuId == R.id.menu_incognito) {
-            showToast("Incognito clicked");
+
             // TODO: Open incognito tab
 
         } else if (menuId == R.id.menu_Export) {
@@ -218,11 +218,11 @@ public class MenuFragement extends Fragment {
             // TODO: Block current site
 
         } else if (menuId == R.id.menu_download) {
-            showToast("Download clicked");
+
             // TODO: Open downloads
 
         } else if (menuId == R.id.menu_feedback) {
-            showToast("Feedback clicked");
+
             // TODO: Open feedback form
 
         } else if (menuId == R.id.menu_share) {
@@ -235,7 +235,7 @@ public class MenuFragement extends Fragment {
             startActivity(new Intent(requireContext(), SettingActivity.class));
 
         } else if (menuId == R.id.menu_quit) {
-            showToast("Quit clicked");
+
             // TODO: Exit app or close menu
             if (getActivity() != null) {
                 getActivity().finish();

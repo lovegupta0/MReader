@@ -29,7 +29,7 @@ public class SettingStorage {
         return instance;
     }
     public SettingDataModel getSetting(){
-        Log.d(TAG,dataModel.toString());
+        Log.d(TAG,String.valueOf(dataModel));
         return dataModel;
     }
     public General getGeneral(){
@@ -52,6 +52,11 @@ public class SettingStorage {
     }
     public boolean verify(){
         if(dataModel==null) return false;
+        if(dataModel.getGeneralSection()==null) return false;
+        if(dataModel.getPrivacySection()==null) return false;
+        if(dataModel.getPerformanceSection()==null) return false;
+        if(dataModel.getDownloadSection()==null) return false;
+        if(dataModel.getAdvancedSection()==null) return false;
         return true;
     }
     public void update(SettingDataModel dataModel){

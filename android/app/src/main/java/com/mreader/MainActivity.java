@@ -1,5 +1,6 @@
 package com.mreader;
 
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
@@ -40,15 +41,14 @@ import com.mreader.databinding.ActivityMainBinding;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
+
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-import com.karumi.dexter.listener.single.PermissionListener;
+
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.UUID;
+
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding main;
@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         init();
         webViewModel=new ViewModelProvider(this).get(WebViewModel.class);
         imgViewModel =new ViewModelProvider(this).get(ImageViewModel.class);
+        main.progressbar.hide();
         main.goUrl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -129,6 +130,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        webViewModel.getLoadProgressBar().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean visible) {
+                if (Boolean.TRUE.equals(visible)) {
+                    main.progressbar.show();
+                } else {
+                    main.progressbar.hide();
+                }
+            }
+        });
         if(intent.hasExtra("openWeb") && intent.getBooleanExtra("openWeb",false) && intent.hasExtra("url")){
             webViewModel.setUrlAddress(intent.getStringExtra("url"));
             webViewModel.setWebRequest(true);
@@ -147,7 +158,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 WebFragment web=(WebFragment) manger.findFragmentById(R.id.frame);
                 if(web!=null && webViewModel.getWebRequest().getValue()){
+                    webViewModel.toggleNavigate();
                     web.onForward();
+
                 }
                 else {
                     return;
@@ -312,21 +325,29 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (isMenuVisible) {
-            hideMenu();
-            return;
-        }
+        try {
 
-        WebFragment web = (WebFragment) manger.findFragmentById(R.id.frame);
-        if (web != null) {
-            boolean handled = web.onBackPressed();
-            if (handled) {
+
+            if (isMenuVisible) {
+                hideMenu();
                 return;
             }
 
-            changeFragment(new HomeFragment());
-            return;
+            WebFragment web = (WebFragment) manger.findFragmentById(R.id.frame);
+            if (web != null) {
+                boolean handled = web.onBackPressed();
+                webViewModel.toggleNavigate();
+                if (handled) {
+                    return;
+                }
+
+                changeFragment(new HomeFragment());
+                return;
+            }
+        } catch (Exception e) {
+            this.finish();
         }
+
 
         super.onBackPressed();
     }

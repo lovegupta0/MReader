@@ -27,7 +27,7 @@ public class ImageThreadPool implements ThreadsPoolManager {
     // Configuration constants — tune as needed
     private static final int CORE_THREADS = 2;           // minimum threads kept alive
     private static final int MAX_THREADS = 2;            // fixed pool size for stability
-    private static final int QUEUE_CAPACITY = 70;        // how many pending tasks before throttling
+    private static final int QUEUE_CAPACITY = 1000;        // how many pending tasks before throttling
     private static final long KEEP_ALIVE_SECONDS = 60L;  // unused here but harmless
 
     private ImageThreadPool() {
@@ -40,7 +40,7 @@ public class ImageThreadPool implements ThreadsPoolManager {
                 TimeUnit.SECONDS,
                 workQueue,
                 new NamedThreadFactory("MReaderWorker"),
-                new ThreadPoolExecutor.CallerRunsPolicy() // apply backpressure instead of OOM
+                new ThreadPoolExecutor.AbortPolicy() // apply backpressure instead of OOM
         );
 
         executor.allowCoreThreadTimeOut(false);
